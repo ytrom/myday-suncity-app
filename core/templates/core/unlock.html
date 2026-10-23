@@ -8,7 +8,7 @@
     <h1 class="lock-title">Welcome back, {{ staff.first_name }}</h1>
     <p class="lock-sub">Enter your PIN to open MyDay</p>
     {% if error %}<p class="lock-error" role="alert">{{ error }}</p>{% endif %}
-    <form method="post" action="{% url 'unlock' %}" class="lock-form" data-pin-form data-pin-length="{{ pin_length }}">
+    <form method="post" action="{% url 'unlock' %}" class="lock-form" data-pin-form data-pin-min="{{ pin_min }}" data-pin-max="{{ pin_max }}">
       {% csrf_token %}
       <input type="hidden" name="pin" data-pin-value>
       {% include "core/partials/keypad.html" with light=False %}

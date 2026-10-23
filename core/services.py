@@ -52,6 +52,12 @@ def pin_locked_out(user):
     return PinAttempt.objects.filter(user_id=user.id, at__gte=since).count() >= settings.PIN_MAX_ATTEMPTS
 
 
+def pin_lengths():
+    """Shortest and longest PIN the keypad accepts (the login clock allows 4 to 6 digits)."""
+    low = int(settings_value("MYDAY_PIN_MIN", "4"))
+    return {"pin_min": low, "pin_max": max(low, int(settings_value("MYDAY_PIN_MAX", "6")))}
+
+
 def verify_pin(user, pin):
     """True if the PIN matches the login-clock PIN (Django-hashed in accounts_membership)."""
     if pin_locked_out(user):

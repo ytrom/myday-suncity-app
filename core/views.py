@@ -45,7 +45,7 @@ def unlock(request):
     return render(
         request,
         "core/unlock.html",
-        {"error": error, "pin_length": int(services.settings_value("MYDAY_PIN_LENGTH", "4"))},
+        {"error": error, **services.pin_lengths()},
         status=200 if not error else 400,
     )
 
@@ -175,7 +175,7 @@ def clock_start(request, action):
         {
             "action": action,
             "label": ACTIONS[action],
-            "pin_length": int(services.settings_value("MYDAY_PIN_LENGTH", "4")),
+            **services.pin_lengths(),
         },
     )
 
@@ -187,7 +187,7 @@ def clock_submit(request, action):
     def pin_error(message):
         resp = render(request, "core/partials/pin_sheet.html", {
             "action": action, "label": ACTIONS[action],
-            "pin_length": int(services.settings_value("MYDAY_PIN_LENGTH", "4")), "error": message,
+            **services.pin_lengths(), "error": message,
         })
         resp["HX-Retarget"] = "#shift-actions"
         resp["HX-Reswap"] = "innerHTML"

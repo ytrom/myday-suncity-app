@@ -1,5 +1,5 @@
 <div class="dots" role="status" aria-live="polite" data-pin-dots>
-  {% for i in "123456"|make_list|slice:pin_length %}<span class="pin-dot"></span>{% endfor %}
+  {% for i in "123456"|make_list|slice:pin_min %}<span class="pin-dot"></span>{% endfor %}
 </div>
 <div class="keypad{% if not light %} keypad-dark{% endif %}">
   {% for k in "123456789"|make_list %}<button type="button" class="key" data-key="{{ k }}">{{ k }}</button>{% endfor %}
@@ -11,3 +11,4 @@
   <button type="button" class="key" data-key="0">0</button>
   <button type="button" class="key key-text" data-key="back" aria-label="Delete last digit">⌫</button>
 </div>
+<button type="button" class="key-enter" data-key="enter" disabled>Enter</button>

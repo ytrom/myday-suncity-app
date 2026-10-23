@@ -1,4 +1,4 @@
-<form class="pin-sheet" hx-post="{% url 'clock_submit' action %}" hx-target="#shift-card" hx-swap="outerHTML" data-pin-form data-pin-length="{{ pin_length }}" data-locate>
+<form class="pin-sheet" hx-post="{% url 'clock_submit' action %}" hx-target="#shift-card" hx-swap="outerHTML" data-pin-form data-pin-min="{{ pin_min }}" data-pin-max="{{ pin_max }}" data-locate>
   <p class="pin-title">Enter your PIN to {{ label|lower }}</p>
   <p class="hint">Same PIN as the login clock</p>
   {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}

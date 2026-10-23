@@ -185,3 +185,8 @@ a.avatar { display: inline-flex; align-items: center; justify-content: center; t
 .facts dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 .sublabel { margin-top: 20px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--grey); }
 a.btn { text-decoration: none; box-sizing: border-box; }
+
+/* Enter key: PINs are 4 to 6 digits, so short PINs need a tap to send */
+.key-enter { margin-top: 12px; width: 100%; min-height: 52px; border-radius: 12px; border: 0; background: var(--blue); color: #fff; font: 700 16px Inter, system-ui, sans-serif; cursor: pointer; }
+.key-enter:disabled { opacity: .35; cursor: default; }
+.lock .key-enter { margin-top: 18px; border-radius: 999px; background: #fff; color: var(--navy); }

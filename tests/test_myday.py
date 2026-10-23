@@ -367,3 +367,11 @@ class DetailsTests(Base):
         out = StringIO()
         call_command("staff_details", stdout=out)
         self.assertIn("Nothing waiting", out.getvalue())
+
+
+class LongPinTests(Base):
+    def test_six_digit_pin_opens_app(self):
+        Membership.objects.filter(user=self.sam).update(pin_hash=make_password("246810"))
+        with self.signed_in():
+            self.assertContains(self.client.get("/unlock"), 'data-pin-max="6"')
+            self.assertRedirects(self.unlock("246810"), "/myday", fetch_redirect_response=False)

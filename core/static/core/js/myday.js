@@ -27,9 +27,14 @@
   // --- PIN keypad -------------------------------------------------------------
   function render(form) {
     var value = form.querySelector("[data-pin-value]").value;
-    form.querySelectorAll(".pin-dot").forEach(function (dot, i) {
-      dot.classList.toggle("filled", i < value.length);
-    });
+    var min = parseInt(form.dataset.pinMin || "4", 10);
+    var box = form.querySelector("[data-pin-dots]");
+    var want = Math.max(min, value.length);
+    while (box.children.length < want) { var d = document.createElement("span"); d.className = "pin-dot"; box.appendChild(d); }
+    while (box.children.length > want) box.removeChild(box.lastChild);
+    Array.prototype.forEach.call(box.children, function (dot, i) { dot.classList.toggle("filled", i < value.length); });
+    var enter = form.querySelector('[data-key="enter"]');
+    if (enter) enter.disabled = value.length < min;
   }
 
   function submit(form) {
@@ -50,8 +55,10 @@
     var form = key.closest("[data-pin-form]");
     if (!form || form.classList.contains("busy")) return;
     var input = form.querySelector("[data-pin-value]");
-    var max = parseInt(form.dataset.pinLength || "4", 10);
+    var min = parseInt(form.dataset.pinMin || "4", 10);
+    var max = parseInt(form.dataset.pinMax || "6", 10);
     var k = key.dataset.key;
+    if (k === "enter") { if (input.value.length >= min) submit(form); return; }
     if (k === "back") input.value = input.value.slice(0, -1);
     else if (k === "clear") input.value = "";
     else if (input.value.length < max) input.value += k;
@@ -63,7 +70,7 @@
   document.addEventListener("keydown", function (e) {
     var form = document.querySelector(".lock [data-pin-form]");
     if (!form) return;
-    var map = { Backspace: "back", Escape: "clear" };
+    var map = { Backspace: "back", Escape: "clear", Enter: "enter" };
     var k = /^[0-9]$/.test(e.key) ? e.key : map[e.key];
     if (!k) return;
     var btn = form.querySelector('[data-key="' + k + '"]');
