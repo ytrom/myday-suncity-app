@@ -1,16 +1,2 @@
 {% extends "core/base.html" %}
-{% comment %}Full-screen tools (Mechanic, Lane Marshal): a slim title bar with Close instead of the header and buttons.{% endcomment %}
-{% block body %}
-  <div class="app">
-    <header class="toolbar">
-      <h1 class="toolbar-title">{% block tool_title %}{% endblock %}<span class="toolbar-version">MyDay v{{ version }}</span></h1>
-      <a href="{% url 'myday' %}" class="toolbar-close" aria-label="Close">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        Close
-      </a>
-    </header>
-    <main id="main" class="tool-main">
-      {% block main %}{% endblock %}
-    </main>
-  </div>
-{% endblock %}
+{% comment %}Mechanic and Lane Marshal: the top tabs stay, and a title bar with Close takes the place of the second row of buttons (see partials/tabs.html).{% endcomment %}
