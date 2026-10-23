@@ -155,6 +155,7 @@ def _shift_ctx(request):
         "is_on": is_on,
         "since": since,
         "on_site": on_site,
+        "locate": services.location_check_on(request.staff),
         "clocked_off_at": None if is_on else services.last_clock_off_today(request.staff),
     }
 
@@ -175,6 +176,7 @@ def clock_start(request, action):
         {
             "action": action,
             "label": ACTIONS[action],
+            "locate": services.location_check_on(request.staff),
             **services.pin_lengths(),
         },
     )
@@ -186,7 +188,7 @@ def clock_submit(request, action):
         return HttpResponseBadRequest()
     def pin_error(message):
         resp = render(request, "core/partials/pin_sheet.html", {
-            "action": action, "label": ACTIONS[action],
+            "action": action, "label": ACTIONS[action], "locate": services.location_check_on(request.staff),
             **services.pin_lengths(), "error": message,
         })
         resp["HX-Retarget"] = "#shift-actions"
@@ -200,6 +202,9 @@ def clock_submit(request, action):
             return pin_error(f"Too many tries. Wait {settings.PIN_LOCKOUT_MINUTES} minutes.")
         return pin_error("That PIN didn't match. Try again.")
 
+    if not services.location_check_on(request.staff):
+        services.clock(request.staff, request.membership, action, on_site=None)
+        return _shift_card(request)
     on_site = services.is_on_site(request, request.POST.get("lat"), request.POST.get("lng"))
     if on_site:
         services.clock(request.staff, request.membership, action, on_site=True)

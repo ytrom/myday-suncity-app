@@ -20,7 +20,7 @@ from bc.models import (
     User,
 )
 
-from .models import DetailsUpdate, PinAttempt, SiteCheck
+from .models import DetailsUpdate, PinAttempt, SiteCheck, StaffSetting
 from .pins import pin_matches
 
 
@@ -99,6 +99,16 @@ def on_venue_network(request):
     return False
 
 
+def location_check_on(user):
+    """Whether Log on / Log off asks for this person's location (off unless switched on)."""
+    setting = StaffSetting.objects.filter(user_id=user.id).first()
+    return setting.location_check if setting else settings.LOCATION_CHECK_DEFAULT
+
+
+def set_location_check(user, on):
+    StaffSetting.objects.update_or_create(user_id=user.id, defaults={"location_check": on})
+
+
 def is_on_site(request, lat, lng):
     """Venue wifi, or a phone location within the radius. Coordinates are used here and dropped."""
     if on_venue_network(request):
@@ -145,7 +155,7 @@ def clock(user, membership, action, on_site, reason=""):
     reason = (reason or "").strip()[:200]
     entry_id = None
     if settings.WRITES_ENABLED:
-        note = "" if on_site else f"Off site: {reason}"
+        note = f"Off site: {reason}" if on_site is False else ""
         with transaction.atomic(using="bowlcontrol"):
             current = open_entry(user)
             if action == "on" and not current:
@@ -165,7 +175,7 @@ def clock(user, membership, action, on_site, reason=""):
                 current.save(update_fields=["clock_out", "note"])
                 entry_id = current.id
     SiteCheck.objects.create(
-        user_id=user.id, action=action, on_site=on_site, reason="" if on_site else reason, time_entry_id=entry_id
+        user_id=user.id, action=action, on_site=on_site, reason=reason if on_site is False else "", time_entry_id=entry_id
     )
 
 

@@ -19,7 +19,7 @@ class SiteCheck(models.Model):
 
     user_id = models.IntegerField(db_index=True)
     action = models.CharField(max_length=3, choices=ACTIONS)
-    on_site = models.BooleanField()
+    on_site = models.BooleanField(null=True)  # None: location check switched off for this person
     reason = models.CharField(max_length=200, blank=True)
     at = models.DateTimeField(auto_now_add=True)
     time_entry_id = models.IntegerField(null=True, blank=True)
@@ -46,3 +46,10 @@ class DetailsUpdate(models.Model):
 
     class Meta:
         ordering = ["-sent_at"]
+
+
+class StaffSetting(models.Model):
+    """Per-person switches. location_check: ask for the phone's location at Log on / Log off."""
+
+    user_id = models.IntegerField(unique=True)
+    location_check = models.BooleanField(default=False)

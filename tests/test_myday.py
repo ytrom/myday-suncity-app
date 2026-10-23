@@ -145,6 +145,7 @@ class PinLockTests(Base):
         self.assertEqual(resp["HX-Redirect"], "/unlock")
 
 
+@override_settings(LOCATION_CHECK_DEFAULT=True)
 class ClockTests(Base):
     def setUp(self):
         super().setUp()
@@ -412,3 +413,30 @@ class FastPinTests(Base):
         self.assertTrue(describe(h).startswith("fast [4 hex]") or describe(h).startswith("fast [4 b64]"))
         with mock.patch.dict("os.environ", {"MYDAY_FAST_PIN_SCHEME": "sha256(salt+pin)/hex"}):
             self.assertIsNone(match_fast("2468", h))
+
+
+class LocationCheckOffTests(Base):
+    """The default: no location asked, no on/off-site question."""
+
+    def setUp(self):
+        super().setUp()
+        self.ctx = self.signed_in()
+        self.ctx.enable()
+        self.addCleanup(self.ctx.disable)
+        self.unlock()
+
+    def test_log_on_without_location(self):
+        sheet = self.client.get("/clock/on/start")
+        self.assertNotContains(sheet, "data-locate")
+        resp = self.client.post("/clock/on", {"pin": "1234", **FAR_AWAY})
+        self.assertContains(resp, "Log off")
+        self.assertNotContains(resp, "not at Sun City")
+        self.assertNotContains(resp, "Off site")
+        self.assertIsNone(SiteCheck.objects.get().on_site)
+
+    def test_switch_on_for_one_person(self):
+        from io import StringIO
+        from django.core.management import call_command
+        call_command("location_check", "sam@suncitytenpin.com.au", "on", stdout=StringIO())
+        self.assertContains(self.client.get("/clock/on/start"), "data-locate")
+        self.assertContains(self.client.post("/clock/on", {"pin": "1234", **FAR_AWAY}), "not at Sun City")

@@ -10,7 +10,7 @@
         <p class="muted">You can still log on if you're working.</p>
       {% endif %}
     </div>
-    {% if is_on %}
+    {% if is_on and on_site is not None %}
       <span class="chip {% if on_site %}chip-good{% else %}chip-warn{% endif %}">{% if on_site %}On site{% else %}Off site{% endif %}</span>
     {% endif %}
   </div>
@@ -30,7 +30,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
         Log on
       </button>
-      <p class="hint">You'll enter your PIN. Your location is checked once.</p>
+      <p class="hint">You'll enter your PIN.{% if locate %} Your location is checked once.{% endif %}</p>
     {% endif %}
   </div>
 </section>
