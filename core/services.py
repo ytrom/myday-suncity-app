@@ -4,7 +4,6 @@ import math
 from datetime import timedelta
 
 from django.conf import settings
-from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
@@ -22,6 +21,7 @@ from bc.models import (
 )
 
 from .models import DetailsUpdate, PinAttempt, SiteCheck
+from .pins import pin_matches
 
 
 def today():
@@ -64,7 +64,7 @@ def verify_pin(user, pin):
         return False
     pin = (pin or "").strip()
     ok = bool(pin) and pin.isdigit() and any(
-        check_password(pin, m.pin_hash)
+        pin_matches(pin, m.pin_hash)
         for m in Membership.objects.filter(user_id=user.id).exclude(pin_hash__isnull=True).exclude(pin_hash="")
     )
     if ok:

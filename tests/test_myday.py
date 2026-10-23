@@ -375,3 +375,28 @@ class LongPinTests(Base):
         with self.signed_in():
             self.assertContains(self.client.get("/unlock"), 'data-pin-max="6"')
             self.assertRedirects(self.unlock("246810"), "/myday", fetch_redirect_response=False)
+
+
+class FastPinTests(Base):
+    def fast(self, pin, salt="aB3dE5"):
+        import hashlib
+        return "fast$" + salt + "$" + hashlib.sha256((salt + pin).encode()).hexdigest()
+
+    def test_fast_sha256_pin_opens_app(self):
+        Membership.objects.filter(user=self.sam).update(pin_hash=self.fast("135790"))
+        with self.signed_in():
+            self.assertRedirects(self.unlock("135790"), "/myday", fetch_redirect_response=False)
+
+    def test_wrong_fast_pin_is_refused(self):
+        Membership.objects.filter(user=self.sam).update(pin_hash=self.fast("135790"))
+        with self.signed_in():
+            self.assertEqual(self.unlock("135791").status_code, 400)
+
+    def test_scheme_is_reported_and_can_be_pinned(self):
+        import base64, hashlib, hmac
+        from core.pins import describe, match_fast
+        h = "fast$salt$" + base64.b64encode(hmac.new(b"salt", b"2468", hashlib.sha256).digest()).decode()
+        self.assertEqual(match_fast("2468", h), "hmac(salt,pin)/b64")
+        self.assertTrue(describe(h).startswith("fast [4 hex]") or describe(h).startswith("fast [4 b64]"))
+        with mock.patch.dict("os.environ", {"MYDAY_FAST_PIN_SCHEME": "sha256(salt+pin)/hex"}):
+            self.assertIsNone(match_fast("2468", h))

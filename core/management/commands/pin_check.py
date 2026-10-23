@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from bc.models import Membership, User
 from core.models import PinAttempt
+from core.pins import describe, match_fast
 from core.services import pin_locked_out
 
 
@@ -45,13 +46,14 @@ class Command(BaseCommand):
                 self.stdout.write(f"  User #{user.id}: no membership rows")
             for m in rows:
                 h = m.pin_hash or ""
-                parts = h.split("$")
-                kind = f"{parts[0]} ({parts[1]} rounds)" if len(parts) == 4 else (parts[0] if h else "EMPTY")
-                try:
-                    match = check_password(pin, h) if h else False
-                except Exception as exc:  # e.g. a hasher whose library isn't installed
-                    match = f"error: {type(exc).__name__}: {exc}"
-                self.stdout.write(f"  Membership #{m.id} bowl={m.bowl_id} role={m.role} hash={kind} match={match}")
+                if h.startswith("fast$"):
+                    match = match_fast(pin, h) or False
+                else:
+                    try:
+                        match = check_password(pin, h) if h else False
+                    except Exception as exc:  # e.g. a hasher whose library isn't installed
+                        match = f"error: {type(exc).__name__}: {exc}"
+                self.stdout.write(f"  Membership #{m.id} bowl={m.bowl_id} role={m.role} hash={describe(h)} match={match}")
 
         # Other places a PIN might live (column names only)
         if connections["bowlcontrol"].vendor != "postgresql":
