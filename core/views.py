@@ -267,6 +267,7 @@ def healthz(request):
 @require_GET
 def manifest(request):
     data = {
+        "id": "/myday",
         "name": "MyDay · Sun City Tenpin",
         "short_name": "MyDay",
         "start_url": "/myday",
