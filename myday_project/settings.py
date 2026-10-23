@@ -130,6 +130,8 @@ VENUE_PUBLIC_IPS = env_list("MYDAY_VENUE_PUBLIC_IPS", "")
 
 # Writes into BowlControl stay off until Fletcher confirms the tables and values.
 WRITES_ENABLED = env_bool("MYDAY_WRITES_ENABLED", False)
+# RDO / leave requests can be switched on by themselves, ahead of the other writes.
+LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
 # Which membership/bowl MyDay acts for when a staff member has several.
 DEFAULT_BOWL_ID = env("MYDAY_BOWL_ID", "")
 

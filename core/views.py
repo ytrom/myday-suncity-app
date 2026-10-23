@@ -96,8 +96,8 @@ def rdo(request):
             error = "Check the dates. The end can't be before the start."
         elif start < timezone.localdate():
             error = "The start date is in the past."
-        elif settings.WRITES_ENABLED:
-            services.request_leave(request.staff, kind, start, end, form.get("reason"))
+        elif settings.LEAVE_WRITES_ENABLED:
+            services.request_leave(request.staff, request.membership, kind, start, end, form.get("reason"))
             notice = "Request sent. Your manager will reply here."
             form = {}
         else:

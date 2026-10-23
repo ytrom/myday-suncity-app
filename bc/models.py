@@ -110,13 +110,16 @@ class ShiftAssignment(models.Model):
 
 
 class LeaveRequest(models.Model):
-    # type/status values are still to be confirmed with Fletcher.
+    # Values seen in Vensoft: type ANNUAL / UNPAID, status PENDING / APPROVED / DECLINED.
     user = models.ForeignKey(User, related_name="+", **FK)
+    bowl_id = models.IntegerField()
     start = models.DateField()
     end = models.DateField()
     type = models.CharField(max_length=40)
     status = models.CharField(max_length=40)
-    reason = models.TextField(null=True)
+    reason = models.TextField()
+    created_at = models.DateTimeField()
+    decided_at = models.DateTimeField(null=True)
     decided_by = models.ForeignKey(User, null=True, related_name="+", **FK)
 
     class Meta:

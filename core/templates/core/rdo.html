@@ -35,11 +35,11 @@
         {% for r in requests %}
           <li class="card request-row">
             <div class="grow">
-              <p class="strong">{{ r.type|capfirst }}</p>
+              <p class="strong">{{ r.label }}</p>
               <p class="muted small">{{ r.start|date:"D j M" }}{% if r.end and r.end != r.start %} – {{ r.end|date:"D j M" }}{% endif %}</p>
             </div>
             {% with s=r.status|lower %}
-              <span class="chip {% if s == 'approved' %}chip-good{% elif s == 'pending' %}chip-warn{% else %}chip-plain{% endif %}">{{ r.status|capfirst }}</span>
+              <span class="chip {% if s == 'approved' %}chip-good{% elif s == 'pending' %}chip-warn{% else %}chip-plain{% endif %}">{{ r.status|title }}</span>
             {% endwith %}
           </li>
         {% endfor %}

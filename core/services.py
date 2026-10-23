@@ -287,25 +287,31 @@ def ack_message(user, note_id, session):
 # --- RDO and leave -----------------------------------------------------------
 
 def leave_types():
-    # Values still to be confirmed with Fletcher; override with MYDAY_LEAVE_TYPES.
-    raw = settings_value("MYDAY_LEAVE_TYPES", "rdo:RDO,annual:Annual leave,sick:Sick leave,personal:Unpaid / personal")
+    # The types Vensoft uses (an RDO is unpaid leave there); override with MYDAY_LEAVE_TYPES.
+    raw = settings_value("MYDAY_LEAVE_TYPES", "UNPAID:RDO / day off,ANNUAL:Annual leave")
     return [tuple(x.split(":", 1)) for x in raw.split(",") if ":" in x]
 
 
 def leave_for(user):
-    return list(LeaveRequest.objects.filter(user_id=user.id).order_by("-start")[:10])
+    names = dict(leave_types())
+    rows = list(LeaveRequest.objects.filter(user_id=user.id).order_by("-start")[:10])
+    for r in rows:
+        r.label = names.get(r.type, (r.type or "").title())
+    return rows
 
 
-def request_leave(user, kind, start, end, reason):
-    if not settings.WRITES_ENABLED:
+def request_leave(user, membership, kind, start, end, reason):
+    if not settings.LEAVE_WRITES_ENABLED:
         return None
     return LeaveRequest.objects.create(
         user_id=user.id,
+        bowl_id=membership.bowl_id,
         type=kind,
         start=start,
         end=end,
-        status=settings_value("MYDAY_LEAVE_NEW_STATUS", "pending"),
-        reason=(reason or "").strip()[:1000] or None,
+        status=settings_value("MYDAY_LEAVE_NEW_STATUS", "PENDING"),
+        reason=(reason or "").strip()[:1000],
+        created_at=timezone.now(),
     )
 
 

@@ -291,22 +291,34 @@ class TabTests(Base):
 
     def test_rdo_request_in_test_mode(self):
         start = (timezone.localdate() + timedelta(days=20)).isoformat()
-        resp = self.client.post("/rdo", {"type": "rdo", "start": start, "end": start})
+        resp = self.client.post("/rdo", {"type": "UNPAID", "start": start, "end": start})
         self.assertContains(resp, "Test mode")
         self.assertFalse(LeaveRequest.objects.exists())
 
-    @override_settings(WRITES_ENABLED=True)
+    @override_settings(WRITES_ENABLED=True, LEAVE_WRITES_ENABLED=True)
     def test_rdo_request_saves_when_enabled(self):
         start = timezone.localdate() + timedelta(days=20)
-        resp = self.client.post("/rdo", {"type": "rdo", "start": start.isoformat(), "reason": "Wedding"})
+        resp = self.client.post("/rdo", {"type": "UNPAID", "start": start.isoformat(), "reason": "Wedding"})
         self.assertContains(resp, "Request sent")
         req = LeaveRequest.objects.get()
-        self.assertEqual((req.type, req.status, req.start, req.end), ("rdo", "pending", start, start))
-        self.assertContains(self.client.get("/rdo"), "1 pending")
+        self.assertEqual((req.type, req.status, req.start, req.end), ("UNPAID", "PENDING", start, start))
+        self.assertEqual((req.bowl_id, req.reason), (1, "Wedding"))
+        resp = self.client.get("/rdo")
+        self.assertContains(resp, "1 pending")
+        self.assertContains(resp, "RDO / day off")
+
+    @override_settings(LEAVE_WRITES_ENABLED=True)
+    def test_leave_can_be_switched_on_by_itself(self):
+        start = timezone.localdate() + timedelta(days=30)
+        self.client.post("/rdo", {"type": "ANNUAL", "start": start.isoformat()})
+        self.assertEqual(LeaveRequest.objects.get().reason, "")
+        self.client.post(f"/tasks/{self.task.id}/toggle")
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, "OPEN")
 
     def test_rdo_rejects_bad_dates(self):
         start = timezone.localdate() + timedelta(days=5)
-        resp = self.client.post("/rdo", {"type": "rdo", "start": start.isoformat(), "end": (start - timedelta(days=1)).isoformat()})
+        resp = self.client.post("/rdo", {"type": "UNPAID", "start": start.isoformat(), "end": (start - timedelta(days=1)).isoformat()})
         self.assertContains(resp, "Check the dates")
 
     def test_pwa_files(self):
