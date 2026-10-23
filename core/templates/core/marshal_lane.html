@@ -1,0 +1,28 @@
+{% extends "core/base.html" %}
+{% block title %}Lane {{ lane }}{% endblock %}
+{% block main %}
+  <a href="{% url 'marshal' %}" class="back">&larr; All lanes</a>
+  <section class="section" aria-labelledby="lane-title">
+    <div class="section-head">
+      <h2 id="lane-title">Lane {{ lane }}</h2>
+    </div>
+    {% if already %}
+      <div class="already">
+        <p class="strong">Already reported:</p>
+        {% for c, age in already %}<p>{{ c.issue }} · {{ age }} ago{% if c.attended_age is not None %} · mechanic on the way{% endif %}</p>{% endfor %}
+        <p class="small">Sending below adds another call.</p>
+      </div>
+    {% endif %}
+    {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <p class="muted small">What's wrong?</p>
+      <div class="faults">
+        {% for f in faults %}
+          <label class="fault"><input type="radio" name="issue" value="{{ f }}" required{% if f == picked %} checked{% endif %}><span>{{ f }}</span></label>
+        {% endfor %}
+      </div>
+      <button class="btn btn-alert btn-big" type="submit">Call the mechanic</button>
+    </form>
+  </section>
+{% endblock %}

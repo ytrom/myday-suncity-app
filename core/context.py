@@ -18,6 +18,10 @@ class TabCounts:
         return sum(1 for t in services.tasks_for(self.user, self.request.session) if not t.done)
 
     @cached_property
+    def clocked_on(self):
+        return services.clock_status(self.user)[0]
+
+    @cached_property
     def shifts_to_confirm(self):
         overlay = self.request.session.get("test_overlay", {}).get("confirmed", [])
         return sum(1 for a in services.upcoming_roster(self.user) if not a.confirmed and a.id not in overlay)
@@ -40,6 +44,6 @@ def myday(request):
         "writes_enabled": settings.WRITES_ENABLED,
         "clock_writes_enabled": settings.CLOCK_WRITES_ENABLED,
         "leave_writes_enabled": settings.LEAVE_WRITES_ENABLED,
-        "mechanic": services.is_mechanic(staff),
+        "tools": services.lane_tools(staff),
         "identity_test_mode": getattr(request, "identity_test_mode", False),
     }

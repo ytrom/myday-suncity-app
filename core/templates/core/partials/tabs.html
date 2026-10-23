@@ -3,7 +3,7 @@
   <a href="{% url 'myday' %}" class="tab{% if tab == 'myday' %} active{% endif %}"{% if tab == 'myday' %} aria-current="page"{% endif %}>
     <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span>
     <span class="tab-label">MyDay</span>
-    <span class="tab-sub">{% with n=counts.tasks_to_do %}{{ n }} to do{% endwith %}</span>
+    <span class="tab-sub">{% if counts.clocked_on %}Logged on{% else %}Log on{% endif %}</span>
   </a>
   <a href="{% url 'roster' %}" class="tab{% if tab == 'roster' %} active{% endif %}"{% if tab == 'roster' %} aria-current="page"{% endif %}>
     <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
@@ -20,4 +20,22 @@
     <span class="tab-label">Messages</span>
     <span class="tab-sub">{% with n=counts.unread_messages %}{% if n %}{{ n }} unread{% else %}All read{% endif %}{% endwith %}</span>
   </a>
+  <div class="tools" role="group" aria-label="Tools">
+  <a href="{% url 'tasks' %}" class="tool{% if tab == 'tasks' %} active{% endif %}"{% if tab == 'tasks' %} aria-current="page"{% endif %}>
+    <span class="tool-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span>
+    <span class="tool-text"><span class="tool-label">Shift Tasks</span><span class="tool-sub">{% with n=counts.tasks_to_do %}{% if n %}{{ n }} to do{% else %}All done{% endif %}{% endwith %}</span></span>
+  </a>
+  {% if tools.mechanic %}<a href="{% url 'mechanic' %}" class="tool{% if tab == 'mechanic' %} active{% endif %}"{% if tab == 'mechanic' %} aria-current="page"{% endif %}>
+    <span class="tool-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></span>
+    <span class="tool-text"><span class="tool-label">Mechanic</span><span class="tool-sub">Lane calls</span></span>
+  </a>{% endif %}
+  {% if tools.marshal %}<a href="{% url 'marshal' %}" class="tool{% if tab == 'marshal' %} active{% endif %}"{% if tab == 'marshal' %} aria-current="page"{% endif %}>
+    <span class="tool-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9.5" cy="9" r="1"/><circle cx="13" cy="8" r="1"/><circle cx="12.5" cy="11.5" r="1"/></svg></span>
+    <span class="tool-text"><span class="tool-label">Lane Marshal</span><span class="tool-sub">Report a lane</span></span>
+  </a>{% endif %}
+  <span class="tool soon" aria-disabled="true">
+    <span class="tool-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+    <span class="tool-text"><span class="tool-label">More</span><span class="tool-sub">Coming soon</span></span>
+  </span>
+  </div>
 </nav>

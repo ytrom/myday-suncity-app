@@ -261,13 +261,18 @@ class TabTests(Base):
             publish_at=now - timedelta(days=9), expires_at=now - timedelta(days=1),
         )
 
-    def test_myday_shows_my_tasks_and_unread_banner(self):
+    def test_myday_shows_unread_banner_and_tasks_button(self):
         resp = self.client.get("/myday")
+        self.assertContains(resp, "1 new staff message")
+        self.assertContains(resp, "1 to do")  # on the Shift Tasks button
+        self.assertContains(resp, "Practice only")
+        self.assertContains(resp, "Coming soon")
+        self.assertNotContains(resp, "Print league sheets")
+
+    def test_shift_tasks_page_shows_my_tasks(self):
+        resp = self.client.get("/tasks")
         self.assertContains(resp, "Print league sheets")
         self.assertNotContains(resp, "Someone else's job")
-        self.assertContains(resp, "1 new staff message")
-        self.assertContains(resp, "1 to do")
-        self.assertContains(resp, "Practice only")
 
     def test_tick_task_in_test_mode(self):
         resp = self.client.post(f"/tasks/{self.task.id}/toggle")
@@ -275,7 +280,7 @@ class TabTests(Base):
         self.assertEqual(resp["HX-Trigger"], "counts-changed")
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, "OPEN")
-        self.assertContains(self.client.get("/myday"), "0 to do")
+        self.assertContains(self.client.get("/myday"), "All done")
 
     @override_settings(WRITES_ENABLED=True)
     def test_tick_task_saves_when_enabled(self):
@@ -491,7 +496,7 @@ class MechanicTests(Base):
         services.set_mechanic(self.sam, True)
 
     def test_hidden_unless_switched_on(self):
-        self.assertNotContains(self.client.get("/myday"), "Lane calls from the kiosks")
+        self.assertNotContains(self.client.get("/myday"), "/mechanic\"")
         self.assertEqual(self.client.get("/mechanic").status_code, 404)
         self.assertEqual(self.client.post("/mechanic/7/fix").status_code, 404)
 
@@ -502,7 +507,7 @@ class MechanicTests(Base):
 
     def test_button_and_calls_in_lane_order(self):
         self.make_mechanic()
-        self.assertContains(self.client.get("/myday"), "Lane calls from the kiosks")
+        self.assertContains(self.client.get("/myday"), "/mechanic\"")
         page = self.client.get("/mechanic").content.decode()
         self.assertLess(page.index("Lane 3"), page.index("Lane 12"))
         self.assertIn("Pins down · Pinsetter", page)
@@ -540,3 +545,57 @@ class MechanicTests(Base):
     def test_elapsed(self):
         from core.lanes import elapsed
         self.assertEqual([elapsed(5), elapsed(125), elapsed(3725)], ["5s", "2m", "1h 2m"])
+
+
+@override_settings(MECHANIC_ENABLED=True, LANE_COUNT=20)
+class MarshalTests(Base):
+    """Lane Marshal: report a lane to the mechanic (Lane Marshal's table mocked)."""
+
+    def setUp(self):
+        super().setUp()
+        self.ctx = self.signed_in()
+        self.ctx.enable()
+        self.addCleanup(self.ctx.disable)
+        self.unlock()
+        from core.lanes import Call
+        patcher = mock.patch("core.lanes.open_calls", return_value=[Call(7, "4", "Interlock", "", "", 300, None)])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def make_marshal(self):
+        from core import services
+        services.set_lane_tool(self.sam, "marshal", True)
+
+    def test_hidden_unless_switched_on(self):
+        self.assertNotContains(self.client.get("/myday"), "Lane Marshal")
+        self.assertEqual(self.client.get("/marshal").status_code, 404)
+        self.assertEqual(self.client.post("/marshal/4", {"issue": "Interlock"}).status_code, 404)
+
+    def test_grid_shows_lanes_and_open_calls(self):
+        self.make_marshal()
+        self.assertContains(self.client.get("/myday"), "Lane Marshal")
+        page = self.client.get("/marshal")
+        self.assertContains(page, 'class="lane-btn down urgent"')
+        self.assertContains(page, "Interlock")
+        self.assertContains(page, ">20<")
+        self.assertEqual(self.client.get("/marshal/21").status_code, 404)
+
+    def test_report_a_lane(self):
+        self.make_marshal()
+        self.assertContains(self.client.get("/marshal/4"), "Already reported")
+        with mock.patch("core.lanes.report") as report:
+            resp = self.client.post("/marshal/4", {"issue": "Off Spot"})
+        report.assert_called_once_with(4, "Off Spot")
+        self.assertRedirects(resp, "/marshal?sent=4", fetch_redirect_response=False)
+        with mock.patch("core.lanes.report") as report:
+            self.assertContains(self.client.post("/marshal/4", {"issue": "DROP TABLE"}), "Pick what")
+        report.assert_not_called()
+
+    def test_switch_command(self):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        call_command("marshal", "sam@suncitytenpin.com.au", "on", stdout=out)
+        self.assertIn("Sam Mason: marshal on", out.getvalue())
+        self.assertEqual(self.client.get("/marshal").status_code, 200)
+        self.assertEqual(self.client.get("/mechanic").status_code, 404)

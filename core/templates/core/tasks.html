@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% block title %}Shift tasks{% endblock %}
+{% block main %}
+  <section class="section" aria-labelledby="tasks-title">
+    <div class="section-head">
+      <h2 id="tasks-title">This shift's tasks</h2>
+    </div>
+    {% if tasks %}
+      <ul class="list card">
+        {% for t in tasks %}{% include "core/partials/task_item.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No tasks for you today.</p>
+    {% endif %}
+  </section>
+{% endblock %}

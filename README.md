@@ -9,7 +9,7 @@ Staff sign in once with their email and a code (Cloudflare Access), then open th
 - **RDO:** RDO and leave requests.
 - **Messages:** the same staff messages as the login clock, with a "Got it" button.
 
-Techs also get a **Mechanic** button on MyDay: the lane calls from the kiosks, the same list as Lane Marshal's /mechanic page, with On my way and Fixed. The phone beeps and buzzes when a new call comes in while that screen is open.
+Under the tabs is a second row of buttons: **Shift Tasks** for everyone, **Mechanic** and **Lane Marshal** for staff switched on for them, and room for more. Techs get a **Mechanic** button: the lane calls from the kiosks, the same list as Lane Marshal's /mechanic page, with On my way and Fixed. The phone beeps and buzzes when a new call comes in while that screen is open.
 
 Log on and Log off ask for the PIN and check the phone's location once. Anyone away from the venue is asked "working off-site today?" and gives a reason. MyDay stores only *on site* or *off site* and that reason. It never stores coordinates or distance.
 
@@ -87,10 +87,13 @@ GRANT CONNECT ON DATABASE "Suncity_Database" TO myday_app;
 \c Suncity_Database
 GRANT USAGE ON SCHEMA public TO myday_app;
 GRANT SELECT, UPDATE (attended_at, fixed_at, fixed_by) ON tech_control_troublecall TO myday_app;
+-- Lane Marshal screen (reporting a lane) also needs:
+GRANT INSERT ON tech_control_troublecall TO myday_app;
+DO $$ BEGIN EXECUTE format('GRANT USAGE ON SEQUENCE %s TO myday_app', pg_get_serial_sequence('tech_control_troublecall', 'id')); END $$;
 ```
 
 Then set `MYDAY_MECHANIC=1` in `.env`, rebuild, and switch it on per tech:
-`docker compose exec myday python manage.py mechanic someone@example.com on`.
+`docker compose exec myday python manage.py mechanic someone@example.com on`, and likewise `manage.py marshal` for the Lane Marshal screen. Calls reported from MyDay are logged with ID `APP` (the tablets use `TAB`).
 
 ## Cloudflare setup (Morty)
 

@@ -146,8 +146,15 @@ LOCATION_CHECK_DEFAULT = env_bool("MYDAY_LOCATION_CHECK", False)
 # Log on / Log off into the Vensoft time log, likewise on its own.
 CLOCK_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_CLOCK_WRITES", False)
 LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
-# Mechanic screen (Lane Marshal trouble calls) for staff switched on with manage.py mechanic.
+# Lane calls (Lane Marshal's trouble calls): the Mechanic and Lane Marshal screens, for staff
+# switched on with manage.py mechanic / manage.py marshal.
 MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)
+LANE_COUNT = int(env("MYDAY_LANES", "20"))
+# The faults a lane marshal can report (same list as Lane Marshal's /marshall screen).
+MARSHAL_CALLS = env_list(
+    "MYDAY_MARSHAL_CALLS",
+    "Full Set,Full Set on Second Ball,Ball Down the Back,Off Spot,Interlock,Scored – No Cycle,Machine Off,Other",
+)
 MECHANIC_POLL_SECONDS = int(env("MYDAY_MECHANIC_POLL_SECONDS", "5"))
 # Which membership/bowl MyDay acts for when a staff member has several.
 DEFAULT_BOWL_ID = env("MYDAY_BOWL_ID", "")

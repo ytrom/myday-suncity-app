@@ -109,15 +109,33 @@ def set_location_check(user, on):
     StaffSetting.objects.update_or_create(user_id=user.id, defaults={"location_check": on})
 
 
-def is_mechanic(user):
-    """Whether this person gets the Mechanic screen (off unless switched on, and the feature is on)."""
+LANE_TOOLS = ("mechanic", "marshal")
+
+
+def lane_tools(user):
+    """Which lane-call screens this person gets: {"mechanic": bool, "marshal": bool}.
+    Off unless switched on for them, and only while the lane-calls feature is on."""
+    off = dict.fromkeys(LANE_TOOLS, False)
     if not settings.MECHANIC_ENABLED or not user:
-        return False
-    return StaffSetting.objects.filter(user_id=user.id, mechanic=True).exists()
+        return off
+    s = StaffSetting.objects.filter(user_id=user.id).first()
+    return {t: getattr(s, t) for t in LANE_TOOLS} if s else off
+
+
+def is_mechanic(user):
+    return lane_tools(user)["mechanic"]
+
+
+def is_marshal(user):
+    return lane_tools(user)["marshal"]
+
+
+def set_lane_tool(user, tool, on):
+    StaffSetting.objects.update_or_create(user_id=user.id, defaults={tool: on})
 
 
 def set_mechanic(user, on):
-    StaffSetting.objects.update_or_create(user_id=user.id, defaults={"mechanic": on})
+    set_lane_tool(user, "mechanic", on)
 
 
 def is_on_site(request, lat, lng):

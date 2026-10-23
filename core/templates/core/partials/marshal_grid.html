@@ -1,0 +1,17 @@
+<div id="lane-grid" hx-get="{% url 'marshal_grid' %}" hx-trigger="every {{ poll }}s" hx-swap="outerHTML">
+  {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+  <div class="lane-grid">
+    {% for g in grid %}
+      <a href="{% url 'marshal_lane' g.lane %}" class="lane-btn{% if g.oldest %} down{% if g.oldest.urgent %} urgent{% endif %}{% endif %}">
+        <span class="lane-no">{{ g.lane }}</span>
+        {% if g.oldest %}
+          <span class="lane-state">{{ g.oldest.issue }}</span>
+          <span class="lane-state">{{ g.age }}{% if g.more %} · +{{ g.more }}{% endif %}</span>
+        {% else %}
+          <span class="lane-state">OK</span>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+  {% if open_count %}<p class="muted small calls-count">{{ open_count }} open call{{ open_count|pluralize }}</p>{% endif %}
+</div>

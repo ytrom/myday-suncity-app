@@ -70,6 +70,13 @@ def fix(call_id, who):
                   "WHERE id = %s AND fixed_at IS NULL", [(who or "MECH")[:FIXED_BY_MAX], call_id])
 
 
+def report(lane, issue):
+    """A new call from a lane marshal, as Lane Marshal's own screen would log it."""
+    with _cursor() as c:
+        c.execute('INSERT INTO tech_control_troublecall ("ISSUE", "LANE", "OPTION", "NOTE", "DATE", "ID") '
+                  "VALUES (%s, %s, '', '', NOW(), 'APP')", [issue, str(lane)])
+
+
 def by_lane(calls):
     """[(lane, [calls])] in lane order."""
     groups = {}

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import connections
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -65,13 +66,12 @@ def home(request):
 
 @require_GET
 def myday(request):
-    return _page(
-        request,
-        "core/myday.html",
-        "myday",
-        tasks=services.tasks_for(request.staff, request.session),
-        **_shift_ctx(request),
-    )
+    return _page(request, "core/myday.html", "myday", **_shift_ctx(request))
+
+
+@require_GET
+def tasks(request):
+    return _page(request, "core/tasks.html", "tasks", tasks=services.tasks_for(request.staff, request.session))
 
 
 @require_GET
@@ -275,6 +275,11 @@ def _mechanic_only(request):
         raise Http404
 
 
+def _marshal_only(request):
+    if not services.is_marshal(request.staff):
+        raise Http404
+
+
 def _calls(request, error=None):
     try:
         calls = lanes.open_calls()
@@ -316,6 +321,55 @@ def mechanic_action(request, call_id, action):
     except Exception:
         error = "That didn't save. Try again."
     return render(request, "core/partials/mechanic_calls.html", _calls(request, error))
+
+
+def _lane_grid(error=None):
+    try:
+        calls = lanes.open_calls()
+    except Exception:
+        calls, error = [], error or "Can't reach the lane calls right now. Trying again..."
+    grid = []
+    for n in range(1, settings.LANE_COUNT + 1):
+        on_lane = sorted((c for c in calls if c.lane.strip() == str(n)), key=lambda c: -c.age)
+        oldest = on_lane[0] if on_lane else None
+        grid.append({"lane": n, "calls": on_lane, "oldest": oldest,
+                     "age": lanes.elapsed(oldest.age) if oldest else "", "more": max(len(on_lane) - 1, 0)})
+    return {"grid": grid, "open_count": len(calls), "error": error, "poll": settings.MECHANIC_POLL_SECONDS}
+
+
+@require_GET
+def marshal(request):
+    _marshal_only(request)
+    return _page(request, "core/marshal.html", "marshal", sent=request.GET.get("sent"), **_lane_grid())
+
+
+@require_GET
+def marshal_grid(request):
+    _marshal_only(request)
+    return render(request, "core/partials/marshal_grid.html", _lane_grid())
+
+
+def marshal_lane(request, lane):
+    _marshal_only(request)
+    if not 1 <= lane <= settings.LANE_COUNT:
+        raise Http404
+    error = None
+    if request.method == "POST":
+        issue = request.POST.get("issue", "")
+        if issue not in settings.MARSHAL_CALLS:
+            error = "Pick what's wrong first."
+        else:
+            try:
+                lanes.report(lane, issue)
+                return redirect(f"{reverse('marshal')}?sent={lane}")
+            except Exception:
+                error = "That didn't send. Try again, or use the Lane Marshal tablet."
+    try:
+        already = [(c, lanes.elapsed(c.age)) for c in lanes.open_calls() if c.lane.strip() == str(lane)]
+    except Exception:
+        already = []
+    return _page(request, "core/marshal_lane.html", "marshal", lane=lane, faults=settings.MARSHAL_CALLS,
+                 already=already, error=error, picked=request.POST.get("issue", ""))
 
 
 @require_GET
