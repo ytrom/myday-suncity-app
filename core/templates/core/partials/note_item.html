@@ -1,0 +1,15 @@
+<li id="note-{{ n.id }}" class="card note{% if n.unread %} unread{% endif %}">
+  <div class="note-head">
+    <p class="strong">{{ n.title }}</p>
+    {% if n.unread %}<span class="chip chip-new">NEW</span>{% endif %}
+  </div>
+  <p class="note-body">{{ n.note|linebreaksbr }}</p>
+  <div class="note-foot">
+    <p class="muted small">{% if n.publish_at %}{{ n.publish_at|date:"D j M, g:i a" }}{% endif %}</p>
+    {% if n.unread %}
+      <button class="btn btn-primary btn-small" hx-post="{% url 'message_ack' n.id %}" hx-target="#note-{{ n.id }}" hx-swap="outerHTML">Got it</button>
+    {% else %}
+      <span class="read">Read</span>
+    {% endif %}
+  </div>
+</li>

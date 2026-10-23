@@ -1,0 +1,15 @@
+<li id="shift-{{ a.id }}" class="card roster-row">
+  <div class="datebox">
+    <span class="dow">{{ a.shift.date|date:"D"|upper }}</span>
+    <span class="day">{{ a.shift.date|date:"j" }}</span>
+  </div>
+  <div class="grow">
+    <p class="roster-time">{{ a.shift.start_time|time:"g:i a" }} – {{ a.shift.end_time|time:"g:i a" }}</p>
+    <p class="muted small">{% firstof a.shift.role "Shift" %}{% if a.shift.date == today %} · Today{% endif %}</p>
+  </div>
+  {% if a.confirmed %}
+    <span class="chip chip-good">Confirmed</span>
+  {% else %}
+    <button class="btn btn-primary btn-small" hx-post="{% url 'shift_confirm' a.id %}" hx-target="#shift-{{ a.id }}" hx-swap="outerHTML">Confirm</button>
+  {% endif %}
+</li>

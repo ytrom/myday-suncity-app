@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block title %}Staff messages{% endblock %}
+{% block main %}
+  <section class="section" aria-labelledby="notes-title">
+    <div class="section-head">
+      <h2 id="notes-title">Staff messages</h2>
+    </div>
+    <p class="muted small">The same messages as the login clock. Tap Got it so management knows you've read it.</p>
+    {% if notes %}
+      <ul class="stack">
+        {% for n in notes %}{% include "core/partials/note_item.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No messages right now.</p>
+    {% endif %}
+  </section>
+{% endblock %}

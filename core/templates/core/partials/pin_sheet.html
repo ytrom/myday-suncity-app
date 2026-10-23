@@ -1,0 +1,9 @@
+<form class="pin-sheet" hx-post="{% url 'clock_submit' action %}" hx-target="#shift-card" hx-swap="outerHTML" data-pin-form data-pin-length="{{ pin_length }}" data-locate>
+  <p class="pin-title">Enter your PIN to {{ label|lower }}</p>
+  <p class="hint">Same PIN as the login clock</p>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <input type="hidden" name="pin" data-pin-value>
+  <input type="hidden" name="lat" data-lat>
+  <input type="hidden" name="lng" data-lng>
+  {% include "core/partials/keypad.html" with light=True cancel_url="shift-card" %}
+</form>

@@ -1,0 +1,13 @@
+<div class="dots" role="status" aria-live="polite" data-pin-dots>
+  {% for i in "123456"|make_list|slice:pin_length %}<span class="pin-dot"></span>{% endfor %}
+</div>
+<div class="keypad{% if not light %} keypad-dark{% endif %}">
+  {% for k in "123456789"|make_list %}<button type="button" class="key" data-key="{{ k }}">{{ k }}</button>{% endfor %}
+  {% if cancel_url %}
+    <button type="button" class="key key-text" hx-get="/{{ cancel_url }}" hx-target="#shift-card" hx-swap="outerHTML">Cancel</button>
+  {% else %}
+    <button type="button" class="key key-text" data-key="clear">Clear</button>
+  {% endif %}
+  <button type="button" class="key" data-key="0">0</button>
+  <button type="button" class="key key-text" data-key="back" aria-label="Delete last digit">⌫</button>
+</div>

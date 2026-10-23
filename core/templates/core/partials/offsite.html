@@ -1,0 +1,14 @@
+<section id="shift-card" class="card shift" aria-label="Today's shift">
+  <form class="offsite" hx-post="{% url 'clock_offsite' action %}" hx-target="#shift-card" hx-swap="outerHTML">
+    <p class="offsite-title">You're not at Sun City right now</p>
+    <p class="muted">Are you working off-site today?</p>
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    <label for="offsite-reason" class="label">Where are you working?</label>
+    <input id="offsite-reason" name="reason" type="text" maxlength="200" required autofocus
+           placeholder="e.g. Picking up stock from supplier" class="input">
+    <div class="row">
+      <button class="btn btn-primary grow">Yes, {{ label|lower }} off-site</button>
+      <button type="button" class="btn btn-ghost" hx-get="{% url 'shift_card' %}" hx-target="#shift-card" hx-swap="outerHTML">Cancel</button>
+    </div>
+  </form>
+</section>

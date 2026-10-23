@@ -1,0 +1,36 @@
+<section id="shift-card" class="card shift" aria-label="Today's shift">
+  <div class="shift-head">
+    <div>
+      <p class="eyebrow">Today's shift</p>
+      {% if shift %}
+        <p class="shift-time">{{ shift.start_time|time:"g:i a" }} – {{ shift.end_time|time:"g:i a" }}</p>
+        {% if shift.role %}<p class="muted">{{ shift.role }}</p>{% endif %}
+      {% else %}
+        <p class="shift-time">Not rostered</p>
+        <p class="muted">You can still log on if you're working.</p>
+      {% endif %}
+    </div>
+    {% if is_on %}
+      <span class="chip {% if on_site %}chip-good{% else %}chip-warn{% endif %}">{% if on_site %}On site{% else %}Off site{% endif %}</span>
+    {% endif %}
+  </div>
+
+  {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+
+  <div id="shift-actions">
+    {% if is_on %}
+      <p class="status"><span class="dot" aria-hidden="true"></span> On shift since {{ since|time:"g:i a" }}</p>
+      <button class="btn btn-outline" hx-get="{% url 'clock_start' 'off' %}" hx-target="#shift-actions" hx-swap="innerHTML">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Log off
+      </button>
+    {% else %}
+      {% if clocked_off_at %}<p class="muted">Logged off at {{ clocked_off_at|time:"g:i a" }}.</p>{% endif %}
+      <button class="btn btn-primary btn-big" hx-get="{% url 'clock_start' 'on' %}" hx-target="#shift-actions" hx-swap="innerHTML">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+        Log on
+      </button>
+      <p class="hint">You'll enter your PIN. Your location is checked once.</p>
+    {% endif %}
+  </div>
+</section>

@@ -1,0 +1,18 @@
+# MyDay on VM 106. Published on 127.0.0.1 only: the Cloudflare tunnel (or Nginx) is the
+# only way in. The ANC site keeps ports 80/443.
+services:
+  myday:
+    build: .
+    image: suncity-myday:latest
+    container_name: myday
+    restart: unless-stopped
+    env_file: /opt/myday/.env
+    ports:
+      - "127.0.0.1:8106:8000"
+    volumes:
+      - myday-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  myday-data:

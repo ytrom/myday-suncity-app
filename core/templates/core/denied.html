@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Can't open MyDay{% endblock %}
+{% block body %}
+  <main class="lock">
+    <img src="{% static 'core/img/wordmark-white.png' %}" alt="Sun City Tenpin" class="lock-logo">
+    <p class="lock-eyebrow">MYDAY</p>
+    {% if reason == "not_staff" %}
+      <h1 class="lock-title">You're not on the staff list</h1>
+      <p class="lock-sub">{{ email }} isn't an active staff email in Vensoft. Ask the office to check your email address.</p>
+    {% else %}
+      <h1 class="lock-title">Please sign in</h1>
+      <p class="lock-sub">Open MyDay at myday.suncitytenpin.com.au and sign in with your work email.</p>
+    {% endif %}
+  </main>
+{% endblock %}

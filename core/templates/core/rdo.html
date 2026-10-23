@@ -1,0 +1,51 @@
+{% extends "core/base.html" %}
+{% block title %}RDO and leave{% endblock %}
+{% block main %}
+  <section class="card section-card" aria-labelledby="rdo-title">
+    <h2 id="rdo-title">Request an RDO or leave</h2>
+    <p class="muted">Your manager gets a notification and replies here.</p>
+    {% if notice %}<p class="flash" role="status">{{ notice }}</p>{% endif %}
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="{% url 'rdo' %}" hx-boost="true">
+      {% csrf_token %}
+      <label for="rdo-type" class="label">Type</label>
+      <select id="rdo-type" name="type" class="input">
+        {% for value, name in types %}<option value="{{ value }}"{% if form.type == value %} selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select>
+      <div class="grid2">
+        <div>
+          <label for="rdo-start" class="label">From</label>
+          <input id="rdo-start" name="start" type="date" class="input" min="{{ min_date }}" value="{{ form.start|default:'' }}" required>
+        </div>
+        <div>
+          <label for="rdo-end" class="label">To</label>
+          <input id="rdo-end" name="end" type="date" class="input" min="{{ min_date }}" value="{{ form.end|default:'' }}">
+        </div>
+      </div>
+      <label for="rdo-reason" class="label">Note for your manager</label>
+      <textarea id="rdo-reason" name="reason" rows="2" class="input" placeholder="Optional" maxlength="1000">{{ form.reason|default:'' }}</textarea>
+      <button class="btn btn-primary btn-wide">Send request</button>
+    </form>
+  </section>
+
+  <section class="section" aria-labelledby="requests-title">
+    <div class="section-head"><h2 id="requests-title">My requests</h2></div>
+    {% if requests %}
+      <ul class="stack">
+        {% for r in requests %}
+          <li class="card request-row">
+            <div class="grow">
+              <p class="strong">{{ r.type|capfirst }}</p>
+              <p class="muted small">{{ r.start|date:"D j M" }}{% if r.end and r.end != r.start %} – {{ r.end|date:"D j M" }}{% endif %}</p>
+            </div>
+            {% with s=r.status|lower %}
+              <span class="chip {% if s == 'approved' %}chip-good{% elif s == 'pending' %}chip-warn{% else %}chip-plain{% endif %}">{{ r.status|capfirst }}</span>
+            {% endwith %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No requests yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

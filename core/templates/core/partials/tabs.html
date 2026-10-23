@@ -1,0 +1,23 @@
+<nav id="tabs" class="tabs" aria-label="Sections" hx-boost="true"
+     hx-get="{% url 'tabs' %}?tab={{ tab }}" hx-trigger="counts-changed from:body" hx-swap="outerHTML">
+  <a href="{% url 'myday' %}" class="tab{% if tab == 'myday' %} active{% endif %}"{% if tab == 'myday' %} aria-current="page"{% endif %}>
+    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span>
+    <span class="tab-label">MyDay</span>
+    <span class="tab-sub">{% with n=counts.tasks_to_do %}{{ n }} to do{% endwith %}</span>
+  </a>
+  <a href="{% url 'roster' %}" class="tab{% if tab == 'roster' %} active{% endif %}"{% if tab == 'roster' %} aria-current="page"{% endif %}>
+    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+    <span class="tab-label">My Roster</span>
+    <span class="tab-sub">{% with n=counts.shifts_to_confirm %}{% if n %}{{ n }} to confirm{% else %}All set{% endif %}{% endwith %}</span>
+  </a>
+  <a href="{% url 'rdo' %}" class="tab{% if tab == 'rdo' %} active{% endif %}"{% if tab == 'rdo' %} aria-current="page"{% endif %}>
+    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg></span>
+    <span class="tab-label">RDO</span>
+    <span class="tab-sub">{% with n=counts.leave_pending %}{% if n %}{{ n }} pending{% else %}Request{% endif %}{% endwith %}</span>
+  </a>
+  <a href="{% url 'messages' %}" class="tab{% if tab == 'messages' %} active{% endif %}"{% if tab == 'messages' %} aria-current="page"{% endif %}>
+    <span class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+    <span class="tab-label">Messages</span>
+    <span class="tab-sub">{% with n=counts.unread_messages %}{% if n %}{{ n }} unread{% else %}All read{% endif %}{% endwith %}</span>
+  </a>
+</nav>

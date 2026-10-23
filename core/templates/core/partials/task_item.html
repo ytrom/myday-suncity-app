@@ -1,0 +1,10 @@
+<li id="task-{{ t.id }}" class="item">
+  <button class="task{% if t.done %} done{% endif %}" aria-pressed="{% if t.done %}true{% else %}false{% endif %}"
+          hx-post="{% url 'task_toggle' t.id %}" hx-target="#task-{{ t.id }}" hx-swap="outerHTML">
+    <span class="box">{% if t.done %}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>{% endif %}</span>
+    <span class="task-text">
+      <span class="task-title">{{ t.title }}</span>
+      <span class="task-meta">{% firstof t.department "" %}{% if t.area %} · {{ t.area }}{% endif %}{% if t.lane_label %} · {{ t.lane_label }}{% endif %}</span>
+    </span>
+  </button>
+</li>

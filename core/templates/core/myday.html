@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}MyDay{% endblock %}
+{% block main %}
+  {% with n=counts.unread_messages %}{% if n %}
+    <a href="{% url 'messages' %}" class="banner" hx-boost="true">
+      <span class="banner-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="banner-text">
+        <strong>{{ n }} new staff message{{ n|pluralize }}</strong>
+        <small>Read them before you start your shift</small>
+      </span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+  {% endif %}{% endwith %}
+
+  {% include "core/partials/shift_card.html" %}
+
+  <section class="section" aria-labelledby="tasks-title">
+    <div class="section-head">
+      <h2 id="tasks-title">This shift's tasks</h2>
+    </div>
+    {% if tasks %}
+      <ul class="list card">
+        {% for t in tasks %}{% include "core/partials/task_item.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No tasks for you today.</p>
+    {% endif %}
+  </section>
+{% endblock %}

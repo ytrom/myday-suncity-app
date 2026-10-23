@@ -1,0 +1,49 @@
+{% load static %}<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}MyDay{% endblock %} · Sun City Tenpin</title>
+  <meta name="theme-color" content="#1B3F8F">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="{% static 'core/img/icon-192.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'core/img/icon-192.png' %}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'core/css/myday.css' %}">
+  <script src="{% static 'core/js/htmx.min.js' %}" defer></script>
+  <script src="{% static 'core/js/myday.js' %}" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  {% block body %}
+  <div class="app">
+    {% if identity_test_mode or not writes_enabled %}
+      <p class="testbar">
+        Test mode{% if identity_test_mode %} · signed in as {{ staff.email }}{% endif %}{% if not writes_enabled %} · nothing is saved to Vensoft{% endif %}
+      </p>
+    {% endif %}
+    <header class="hero">
+      <div class="hero-top">
+        <img src="{% static 'core/img/wordmark-white.png' %}" alt="Sun City Tenpin" class="wordmark">
+        <div class="hero-right">
+          <span class="pill">MYDAY</span>
+          <form method="post" action="{% url 'lock' %}">
+            {% csrf_token %}
+            <button class="avatar" aria-label="Lock MyDay" title="Lock">{{ staff.initials }}</button>
+          </form>
+        </div>
+      </div>
+      <p class="hero-date">{{ today|date:"l j F" }}</p>
+      <h1 class="hero-name">{{ greeting }}, {{ staff.first_name }}</h1>
+      {% include "core/partials/tabs.html" %}
+    </header>
+    <main id="main">
+      {% block main %}{% endblock %}
+    </main>
+  </div>
+  {% endblock %}
+</body>
+</html>

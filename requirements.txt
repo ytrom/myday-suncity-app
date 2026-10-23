@@ -1,0 +1,5 @@
+Django>=5.2,<5.3
+gunicorn>=23,<27
+psycopg[binary]>=3.2,<4
+PyJWT[crypto]>=2.9,<3
+whitenoise>=6.7,<7

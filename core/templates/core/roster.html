@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% block title %}My Roster{% endblock %}
+{% block main %}
+  <section class="section" aria-labelledby="roster-title">
+    <div class="section-head">
+      <h2 id="roster-title">Upcoming shifts</h2>
+      <span class="muted small">Next 2 weeks</span>
+    </div>
+    {% if rows %}
+      <ul class="stack">
+        {% for a in rows %}{% include "core/partials/roster_item.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No shifts rostered in the next 2 weeks.</p>
+    {% endif %}
+  </section>
+{% endblock %}
