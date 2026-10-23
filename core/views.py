@@ -11,6 +11,8 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from myday_project.version import VERSION
+
 from . import lanes, services
 from .middleware import unlock_session
 
@@ -396,8 +398,8 @@ def healthz(request):
                 c.execute("SELECT 1")
         except Exception as exc:
             return JsonResponse({"ok": False, "bowlcontrol": exc.__class__.__name__}, status=503)
-        return JsonResponse({"ok": True, "bowlcontrol": "ok"})
-    return JsonResponse({"ok": True})
+        return JsonResponse({"ok": True, "bowlcontrol": "ok", "version": VERSION})
+    return JsonResponse({"ok": True, "version": VERSION})
 
 
 @require_GET

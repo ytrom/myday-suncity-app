@@ -1,10 +1,8 @@
-{% extends "core/base.html" %}
+{% extends "core/tool_base.html" %}
 {% block title %}Mechanic{% endblock %}
+{% block tool_title %}Mechanic{% endblock %}
 {% block main %}
-  <section class="section" aria-labelledby="mech-title">
-    <div class="section-head">
-      <h2 id="mech-title">Lane calls</h2>
-    </div>
+  <section class="section" aria-label="Lane calls">
     <p class="muted small">Calls from the lane kiosks, the same list as Lane Marshal. Tap On my way when you head over, and Fixed when it's done. Your phone beeps when a new call comes in while this screen is open.</p>
     {% include "core/partials/mechanic_calls.html" %}
   </section>

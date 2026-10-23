@@ -29,7 +29,7 @@
       <div class="hero-top">
         <img src="{% static 'core/img/wordmark-white.png' %}" alt="Sun City Tenpin" class="wordmark">
         <div class="hero-right">
-          <span class="pill">MYDAY</span>
+          <span class="pill">MYDAY <span class="pill-version">v{{ version }}</span></span>
           <a href="{% url 'details' %}" class="avatar{% if tab == 'details' %} active{% endif %}" aria-label="My details" title="My details">{{ staff.initials }}</a>
         </div>
       </div>

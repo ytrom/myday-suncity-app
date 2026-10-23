@@ -3,6 +3,8 @@ from functools import cached_property
 from django.conf import settings
 from django.utils import timezone
 
+from myday_project.version import VERSION
+
 from . import services
 
 
@@ -45,5 +47,6 @@ def myday(request):
         "clock_writes_enabled": settings.CLOCK_WRITES_ENABLED,
         "leave_writes_enabled": settings.LEAVE_WRITES_ENABLED,
         "tools": services.lane_tools(staff),
+        "version": VERSION,
         "identity_test_mode": getattr(request, "identity_test_mode", False),
     }

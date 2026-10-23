@@ -1,10 +1,8 @@
-{% extends "core/base.html" %}
+{% extends "core/tool_base.html" %}
 {% block title %}Lane Marshal{% endblock %}
+{% block tool_title %}Lane Marshal{% endblock %}
 {% block main %}
-  <section class="section" aria-labelledby="marshal-title">
-    <div class="section-head">
-      <h2 id="marshal-title">Lane Marshal</h2>
-    </div>
+  <section class="section" aria-label="Lanes">
     {% if sent %}<p class="flash">Sent. The mechanic has been called to lane {{ sent }}.</p>{% endif %}
     <p class="muted small">Tap a lane to call the mechanic. Red lanes already have a call open.</p>
     {% include "core/partials/marshal_grid.html" %}

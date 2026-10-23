@@ -63,7 +63,14 @@ class IdentityTests(Base):
         self.assertEqual(resp.status_code, 403)
 
     def test_health_needs_no_sign_in(self):
-        self.assertEqual(self.client.get("/healthz").json(), {"ok": True})
+        from myday_project.version import VERSION
+        self.assertEqual(self.client.get("/healthz").json(), {"ok": True, "version": VERSION})
+
+    def test_version_in_header(self):
+        from myday_project.version import VERSION
+        with self.signed_in():
+            self.unlock()
+            self.assertContains(self.client.get("/myday"), f"v{VERSION}")
 
 
 @override_settings(CF_ACCESS_TEAM_DOMAIN="suncity.cloudflareaccess.com", CF_ACCESS_AUD="aud-123")
