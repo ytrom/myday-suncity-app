@@ -465,3 +465,78 @@ class LocationCheckOffTests(Base):
         call_command("location_check", "sam@suncitytenpin.com.au", "on", stdout=StringIO())
         self.assertContains(self.client.get("/clock/on/start"), "data-locate")
         self.assertContains(self.client.post("/clock/on", {"pin": "1234", **FAR_AWAY}), "not at Sun City")
+
+
+@override_settings(MECHANIC_ENABLED=True)
+class MechanicTests(Base):
+    """The Mechanic screen: lane calls from Lane Marshal's table (mocked here; it's a raw-SQL Postgres table)."""
+
+    def setUp(self):
+        super().setUp()
+        self.ctx = self.signed_in()
+        self.ctx.enable()
+        self.addCleanup(self.ctx.disable)
+        self.unlock()
+        from core.lanes import Call
+        self.calls = [
+            Call(7, "12", "Ball return", "", "", 200, None),
+            Call(8, "3", "Pins down", "Pinsetter", "front row", 30, 10),
+        ]
+        patcher = mock.patch("core.lanes.open_calls", side_effect=lambda: sorted(self.calls, key=lambda c: c.lane_sort))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def make_mechanic(self):
+        from core import services
+        services.set_mechanic(self.sam, True)
+
+    def test_hidden_unless_switched_on(self):
+        self.assertNotContains(self.client.get("/myday"), "Lane calls from the kiosks")
+        self.assertEqual(self.client.get("/mechanic").status_code, 404)
+        self.assertEqual(self.client.post("/mechanic/7/fix").status_code, 404)
+
+    @override_settings(MECHANIC_ENABLED=False)
+    def test_hidden_when_feature_off(self):
+        self.make_mechanic()
+        self.assertEqual(self.client.get("/mechanic").status_code, 404)
+
+    def test_button_and_calls_in_lane_order(self):
+        self.make_mechanic()
+        self.assertContains(self.client.get("/myday"), "Lane calls from the kiosks")
+        page = self.client.get("/mechanic").content.decode()
+        self.assertLess(page.index("Lane 3"), page.index("Lane 12"))
+        self.assertIn("Pins down · Pinsetter", page)
+        self.assertIn("On the way · 10s", page)
+        self.assertIn("Waiting", page)  # lane 12: over 2 minutes, nobody on the way
+        self.assertIn('data-open-ids="8,7"', page)
+
+    def test_on_my_way_and_fixed(self):
+        self.make_mechanic()
+        with mock.patch("core.lanes.attend") as attend:
+            self.assertEqual(self.client.post("/mechanic/7/attend").status_code, 200)
+        attend.assert_called_once_with(7)
+        with mock.patch("core.lanes.fix") as fix:
+            self.client.post("/mechanic/7/fix")
+        fix.assert_called_once_with(7, "Sam")
+        self.assertEqual(self.client.post("/mechanic/7/delete").status_code, 400)
+
+    def test_all_clear_and_unreachable(self):
+        self.make_mechanic()
+        self.calls = []
+        self.assertContains(self.client.get("/mechanic/calls"), "All lanes clear")
+        with mock.patch("core.lanes.open_calls", side_effect=OSError):
+            resp = self.client.get("/mechanic/calls")
+        self.assertContains(resp, "reach the lane calls")
+        self.assertNotContains(resp, "All lanes clear")
+
+    def test_switch_command(self):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        call_command("mechanic", "sam@suncitytenpin.com.au", "on", stdout=out)
+        self.assertIn("Sam Mason: mechanic on", out.getvalue())
+        self.assertEqual(self.client.get("/mechanic").status_code, 200)
+
+    def test_elapsed(self):
+        from core.lanes import elapsed
+        self.assertEqual([elapsed(5), elapsed(125), elapsed(3725)], ["5s", "2m", "1h 2m"])

@@ -9,6 +9,8 @@ Staff sign in once with their email and a code (Cloudflare Access), then open th
 - **RDO:** RDO and leave requests.
 - **Messages:** the same staff messages as the login clock, with a "Got it" button.
 
+Techs also get a **Mechanic** button on MyDay: the lane calls from the kiosks, the same list as Lane Marshal's /mechanic page, with On my way and Fixed. The phone beeps and buzzes when a new call comes in while that screen is open.
+
 Log on and Log off ask for the PIN and check the phone's location once. Anyone away from the venue is asked "working off-site today?" and gives a reason. MyDay stores only *on site* or *off site* and that reason. It never stores coordinates or distance.
 
 Built with Django 5.2, HTMX, WhiteNoise and Gunicorn, in one Docker container on VM 106.
@@ -75,6 +77,20 @@ GRANT INSERT ON roster_leaverequest TO myday_app;
 GRANT UPDATE (status, completed_at, completed_by_id) ON tech_techtask TO myday_app;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO myday_app;
 ```
+
+### Mechanic screen
+
+The lane calls live in Lane Marshal's database (`Suncity_Database`, table `tech_control_troublecall`) on the same Postgres server. On VM 102, as the Postgres admin:
+
+```sql
+GRANT CONNECT ON DATABASE "Suncity_Database" TO myday_app;
+\c Suncity_Database
+GRANT USAGE ON SCHEMA public TO myday_app;
+GRANT SELECT, UPDATE (attended_at, fixed_at, fixed_by) ON tech_control_troublecall TO myday_app;
+```
+
+Then set `MYDAY_MECHANIC=1` in `.env`, rebuild, and switch it on per tech:
+`docker compose exec myday python manage.py mechanic someone@example.com on`.
 
 ## Cloudflare setup (Morty)
 

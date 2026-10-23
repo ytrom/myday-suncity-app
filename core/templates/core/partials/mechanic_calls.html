@@ -1,0 +1,34 @@
+<div id="lane-calls" data-open-ids="{{ open_ids }}"{% if error %} data-error="1"{% endif %}
+     hx-get="{% url 'mechanic_calls' %}" hx-trigger="every {{ poll }}s" hx-swap="outerHTML">
+  {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+  {% if lanes_list %}
+    <p class="muted small calls-count">{{ open_count }} open call{{ open_count|pluralize }}</p>
+    <ul class="stack">
+      {% for lane, calls in lanes_list %}
+        <li class="card lane-card">
+          <p class="lane-name">Lane {{ lane }}</p>
+          {% for c, age, attended in calls %}
+            <div class="call{% if c.urgent %} urgent{% endif %}">
+              <div class="call-text">
+                <p class="strong">{{ c.issue }}{% if c.option %} · {{ c.option }}{% endif %}</p>
+                {% if c.note %}<p class="small">{{ c.note }}</p>{% endif %}
+                <p class="small muted">
+                  {{ age }} ago
+                  {% if attended %}<span class="chip chip-warn">On the way · {{ attended }}</span>{% elif c.urgent %}<span class="chip chip-urgent">Waiting</span>{% endif %}
+                </p>
+              </div>
+              <div class="call-actions">
+                {% if not attended %}
+                  <button class="btn btn-ghost btn-small" hx-post="{% url 'mechanic_action' c.id 'attend' %}" hx-target="#lane-calls" hx-swap="outerHTML">On my way</button>
+                {% endif %}
+                <button class="btn btn-primary btn-small" hx-post="{% url 'mechanic_action' c.id 'fix' %}" hx-target="#lane-calls" hx-swap="outerHTML">Fixed</button>
+              </div>
+            </div>
+          {% endfor %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif not error %}
+    <p class="empty">All lanes clear. No open calls.</p>
+  {% endif %}
+</div>

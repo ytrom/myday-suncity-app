@@ -109,6 +109,17 @@ def set_location_check(user, on):
     StaffSetting.objects.update_or_create(user_id=user.id, defaults={"location_check": on})
 
 
+def is_mechanic(user):
+    """Whether this person gets the Mechanic screen (off unless switched on, and the feature is on)."""
+    if not settings.MECHANIC_ENABLED or not user:
+        return False
+    return StaffSetting.objects.filter(user_id=user.id, mechanic=True).exists()
+
+
+def set_mechanic(user, on):
+    StaffSetting.objects.update_or_create(user_id=user.id, defaults={"mechanic": on})
+
+
 def is_on_site(request, lat, lng):
     """Venue wifi, or a phone location within the radius. Coordinates are used here and dropped."""
     if on_venue_network(request):

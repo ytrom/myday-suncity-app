@@ -40,5 +40,6 @@ def myday(request):
         "writes_enabled": settings.WRITES_ENABLED,
         "clock_writes_enabled": settings.CLOCK_WRITES_ENABLED,
         "leave_writes_enabled": settings.LEAVE_WRITES_ENABLED,
+        "mechanic": services.is_mechanic(staff),
         "identity_test_mode": getattr(request, "identity_test_mode", False),
     }

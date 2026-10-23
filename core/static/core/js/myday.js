@@ -80,6 +80,37 @@
   document.addEventListener("DOMContentLoaded", function () { initForms(document); });
   document.addEventListener("htmx:load", function (e) { initForms(e.target); });
 
+  // --- Mechanic: beep and buzz when a new lane call comes in -------------------
+  var seenCalls = null, audio = null;
+  function wakeAudio() {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!audio && Ctx) audio = new Ctx();
+    if (audio && audio.state === "suspended") audio.resume();
+  }
+  document.addEventListener("pointerdown", wakeAudio, { passive: true });
+  function beep() {
+    if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+    if (!audio) return;
+    [0, 0.35].forEach(function (at) {
+      var osc = audio.createOscillator(), gain = audio.createGain();
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, audio.currentTime + at);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + at + 0.3);
+      osc.connect(gain).connect(audio.destination);
+      osc.start(audio.currentTime + at);
+      osc.stop(audio.currentTime + at + 0.3);
+    });
+  }
+  function checkCalls(root) {
+    var box = root.id === "lane-calls" ? root : root.querySelector && root.querySelector("#lane-calls");
+    if (!box || box.dataset.error) return;
+    var ids = (box.dataset.openIds || "").split(",").filter(Boolean);
+    if (seenCalls && ids.some(function (id) { return seenCalls.indexOf(id) < 0; })) beep();
+    seenCalls = ids;
+  }
+  document.addEventListener("DOMContentLoaded", function () { checkCalls(document); });
+  document.addEventListener("htmx:load", function (e) { checkCalls(e.target); });
+
   // --- Installable app --------------------------------------------------------
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

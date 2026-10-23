@@ -49,7 +49,9 @@ class DetailsUpdate(models.Model):
 
 
 class StaffSetting(models.Model):
-    """Per-person switches. location_check: ask for the phone's location at Log on / Log off."""
+    """Per-person switches. location_check: ask for the phone's location at Log on / Log off.
+    mechanic: show the Mechanic screen (lane trouble calls)."""
 
     user_id = models.IntegerField(unique=True)
     location_check = models.BooleanField(default=False)
+    mechanic = models.BooleanField(default=False)

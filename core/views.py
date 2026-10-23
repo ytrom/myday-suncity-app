@@ -4,13 +4,13 @@ from datetime import date
 
 from django.conf import settings
 from django.db import connections
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
 from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
-from . import services
+from . import lanes, services
 from .middleware import unlock_session
 
 ACTIONS = {"on": "Log on", "off": "Log off"}
@@ -266,6 +266,56 @@ def message_ack(request, note_id):
     resp = render(request, "core/partials/note_item.html", {"n": note})
     resp["HX-Trigger"] = "counts-changed"
     return resp
+
+
+# --- Mechanic: lane trouble calls (shared with Lane Marshal) -------------------
+
+def _mechanic_only(request):
+    if not services.is_mechanic(request.staff):
+        raise Http404
+
+
+def _calls(request, error=None):
+    try:
+        calls = lanes.open_calls()
+    except Exception:  # Lane Marshal's database unreachable: say so, keep polling
+        calls, error = [], error or "Can't reach the lane calls right now. Trying again..."
+    return {
+        "lanes_list": [(lane, [(c, lanes.elapsed(c.age), lanes.elapsed(c.attended_age)) for c in group])
+                       for lane, group in lanes.by_lane(calls)],
+        "open_count": len(calls),
+        "open_ids": ",".join(str(c.id) for c in calls),
+        "error": error,
+        "poll": settings.MECHANIC_POLL_SECONDS,
+    }
+
+
+@require_GET
+def mechanic(request):
+    _mechanic_only(request)
+    return _page(request, "core/mechanic.html", "mechanic", **_calls(request))
+
+
+@require_GET
+def mechanic_calls(request):
+    _mechanic_only(request)
+    return render(request, "core/partials/mechanic_calls.html", _calls(request))
+
+
+@require_POST
+def mechanic_action(request, call_id, action):
+    _mechanic_only(request)
+    error = None
+    try:
+        if action == "attend":
+            lanes.attend(call_id)
+        elif action == "fix":
+            lanes.fix(call_id, request.staff.first_name)
+        else:
+            return HttpResponseBadRequest()
+    except Exception:
+        error = "That didn't save. Try again."
+    return render(request, "core/partials/mechanic_calls.html", _calls(request, error))
 
 
 @require_GET

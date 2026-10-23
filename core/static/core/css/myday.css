@@ -192,3 +192,15 @@ a.btn { text-decoration: none; box-sizing: border-box; }
 .lock .key-enter { margin-top: 18px; border-radius: 999px; background: #fff; color: var(--navy); }
 
 .practice { margin-top: 14px; background: #FEF3C7; color: #78350F; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+
+/* Mechanic: lane calls */
+.calls-count { margin: 10px 0 0; }
+.lane-card { padding: 12px 14px; }
+.lane-name { margin: 0 0 6px; font: 400 22px/1.2 var(--display); color: var(--navy); }
+.call { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.call + .call { border-top: 1px solid var(--line); }
+.call p { margin: 0; }
+.call-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.call-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.call.urgent .strong { color: #B42318; }
+.chip-urgent { background: #FDE2E1; color: #B42318; }

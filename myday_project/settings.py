@@ -82,6 +82,16 @@ DATABASES = {
         "CONN_MAX_AGE": 60,
         "OPTIONS": {"options": "-c timezone=Australia/Brisbane"},
     },
+    # "lanes" = Lane Marshal's trouble calls (Suncity_Database, same server), for the Mechanic screen.
+    "lanes": {
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": env("LANES_DB_HOST", env("BC_DB_HOST", "192.168.0.252")),
+        "PORT": env("LANES_DB_PORT", env("BC_DB_PORT", "5432")),
+        "NAME": env("LANES_DB_NAME", "Suncity_Database"),
+        "USER": env("LANES_DB_USER", env("BC_DB_USER", "myday_app")),
+        "PASSWORD": env("LANES_DB_PASSWORD", env("BC_DB_PASSWORD", "")),
+        "CONN_MAX_AGE": 60,
+    },
 }
 DATABASE_ROUTERS = ["myday_project.routers.BowlControlRouter"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -136,6 +146,9 @@ LOCATION_CHECK_DEFAULT = env_bool("MYDAY_LOCATION_CHECK", False)
 # Log on / Log off into the Vensoft time log, likewise on its own.
 CLOCK_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_CLOCK_WRITES", False)
 LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
+# Mechanic screen (Lane Marshal trouble calls) for staff switched on with manage.py mechanic.
+MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)
+MECHANIC_POLL_SECONDS = int(env("MYDAY_MECHANIC_POLL_SECONDS", "5"))
 # Which membership/bowl MyDay acts for when a staff member has several.
 DEFAULT_BOWL_ID = env("MYDAY_BOWL_ID", "")
 

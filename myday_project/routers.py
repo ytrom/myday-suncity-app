@@ -1,5 +1,5 @@
 class BowlControlRouter:
-    """Send the `bc` app (BowlControl tables) to the bowlcontrol database; never migrate it."""
+    """Send the `bc` app (BowlControl tables) to the bowlcontrol database; never migrate it (nor Lane Marshal's)."""
 
     app_label = "bc"
     db = "bowlcontrol"
@@ -19,7 +19,7 @@ class BowlControlRouter:
         return None
 
     def allow_migrate(self, db, app_label, **hints):
-        if db == self.db:
+        if db in (self.db, "lanes"):
             return False
         if app_label == self.app_label:
             return False
