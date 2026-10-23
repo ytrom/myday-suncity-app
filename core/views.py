@@ -1,11 +1,13 @@
+import base64
 import json
 from datetime import date
+from functools import lru_cache
 
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.db import connections
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
-from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
@@ -264,6 +266,13 @@ def healthz(request):
     return JsonResponse({"ok": True})
 
 
+@lru_cache
+def _icon_data(name):
+    path = finders.find(f"core/img/{name}")
+    with open(path, "rb") as f:
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode()
+
+
 @require_GET
 def manifest(request):
     data = {
@@ -275,9 +284,11 @@ def manifest(request):
         "display": "standalone",
         "background_color": "#1B3F8F",
         "theme_color": "#1B3F8F",
+        # Icons are inlined: the phone fetches them without the Cloudflare Access cookie, so a
+        # /static/ URL would get the sign-in page back and the app would not install.
         "icons": [
-            {"src": static("core/img/icon-192.png"), "sizes": "192x192", "type": "image/png"},
-            {"src": static("core/img/icon-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+            {"src": _icon_data("icon-192.png"), "sizes": "192x192", "type": "image/png"},
+            {"src": _icon_data("icon-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
         ],
     }
     return HttpResponse(json.dumps(data), content_type="application/manifest+json")
