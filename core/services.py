@@ -133,13 +133,13 @@ def clock_status(user):
     if entry:
         on_site = last.on_site if (last and last.action == "on") else True
         return True, entry.clock_in, on_site
-    if not settings.WRITES_ENABLED and last and last.action == "on":
+    if not settings.CLOCK_WRITES_ENABLED and last and last.action == "on":
         return True, last.at, last.on_site
     return False, None, True
 
 
 def last_clock_off_today(user):
-    if settings.WRITES_ENABLED:
+    if settings.CLOCK_WRITES_ENABLED:
         entry = (
             TimeEntry.objects.filter(user_id=user.id, clock_out__date=today())
             .order_by("-clock_out")
@@ -150,29 +150,40 @@ def last_clock_off_today(user):
     return last.at if last and last.action == "off" else None
 
 
+def payable_minutes(clock_in, clock_out):
+    """As the login clock works it out: time on the clock rounded to the nearest 15 minutes."""
+    quarters = (clock_out - clock_in).total_seconds() / 900
+    return int(math.floor(quarters + 0.5)) * 15
+
+
 def clock(user, membership, action, on_site, reason=""):
-    """Log on or off. Writes core_timeentry only when MYDAY_WRITES_ENABLED is on."""
+    """Log on or off. Writes core_timeentry only when clock writes are switched on."""
     reason = (reason or "").strip()[:200]
     entry_id = None
-    if settings.WRITES_ENABLED:
+    if settings.CLOCK_WRITES_ENABLED:
         note = f"Off site: {reason}" if on_site is False else ""
+        now = timezone.now()
         with transaction.atomic(using="bowlcontrol"):
             current = open_entry(user)
             if action == "on" and not current:
                 entry = TimeEntry.objects.create(
                     user_id=user.id,
-                    bowl_id=membership.bowl_id if membership else None,
-                    clock_in=timezone.now(),
-                    source="myday",
-                    note=note or None,
+                    bowl_id=membership.bowl_id,
+                    clock_in=now,
+                    source=settings_value("MYDAY_CLOCK_SOURCE", "kiosk"),
+                    note="; ".join(x for x in ["MyDay", note] if x),
+                    payable_source="AUTO",
+                    created_at=now,
                     is_locked=False,
                 )
                 entry_id = entry.id
-            elif action == "off" and current:
-                current.clock_out = timezone.now()
-                if note:
-                    current.note = "; ".join(x for x in [current.note, note] if x)
-                current.save(update_fields=["clock_out", "note"])
+            elif action == "off" and current and not current.is_locked:
+                current.clock_out = now
+                current.note = "; ".join(x for x in [current.note, note] if x)
+                if current.payable_source == "AUTO":
+                    current.payable_minutes = payable_minutes(current.clock_in, now)
+                    current.payable_updated_at = now
+                current.save(update_fields=["clock_out", "note", "payable_minutes", "payable_updated_at"])
                 entry_id = current.id
     SiteCheck.objects.create(
         user_id=user.id, action=action, on_site=on_site, reason=reason if on_site is False else "", time_entry_id=entry_id

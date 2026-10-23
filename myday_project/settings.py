@@ -133,6 +133,8 @@ WRITES_ENABLED = env_bool("MYDAY_WRITES_ENABLED", False)
 # RDO / leave requests can be switched on by themselves, ahead of the other writes.
 # Location check at Log on / Log off for anyone without their own setting (manage.py location_check).
 LOCATION_CHECK_DEFAULT = env_bool("MYDAY_LOCATION_CHECK", False)
+# Log on / Log off into the Vensoft time log, likewise on its own.
+CLOCK_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_CLOCK_WRITES", False)
 LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
 # Which membership/bowl MyDay acts for when a staff member has several.
 DEFAULT_BOWL_ID = env("MYDAY_BOWL_ID", "")

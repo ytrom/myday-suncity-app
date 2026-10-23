@@ -195,19 +195,43 @@ class ClockTests(Base):
         self.assertContains(resp, "took too long")
         self.assertFalse(SiteCheck.objects.exists())
 
-    @override_settings(WRITES_ENABLED=True)
+    @override_settings(CLOCK_WRITES_ENABLED=True)
     def test_log_on_and_off_write_the_login_clock_when_enabled(self):
         self.client.post("/clock/on", {"pin": "1234", **VENUE})
         entry = TimeEntry.objects.get()
         self.assertIsNone(entry.clock_out)
-        self.assertEqual(entry.source, "myday")
-        self.assertEqual(entry.bowl_id, 1)
+        self.assertEqual((entry.source, entry.payable_source, entry.note, entry.bowl_id), ("kiosk", "AUTO", "MyDay", 1))
+        self.assertIsNone(entry.payable_minutes)
+        self.assertNotContains(self.client.get("/myday"), "Practice only")
 
+        TimeEntry.objects.filter(id=entry.id).update(clock_in=timezone.now() - timedelta(hours=4, minutes=8))
         self.client.post("/clock/off", {"pin": "1234", **FAR_AWAY})
         self.client.post("/clock/off/offsite", {"reason": "Bank run"})
         entry.refresh_from_db()
         self.assertIsNotNone(entry.clock_out)
-        self.assertIn("Off site: Bank run", entry.note)
+        self.assertEqual(entry.payable_minutes, 4 * 60 + 15)
+        self.assertEqual(entry.note, "MyDay; Off site: Bank run")
+
+    @override_settings(CLOCK_WRITES_ENABLED=True)
+    def test_log_off_closes_a_login_clock_entry_but_not_a_locked_one(self):
+        start = timezone.now() - timedelta(hours=2, minutes=6)
+        entry = TimeEntry.objects.create(user=self.sam, bowl_id=1, clock_in=start, source="kiosk", note="",
+                                         payable_source="AUTO", created_at=start, is_locked=False)
+        self.assertContains(self.client.get("/myday"), "Log off")
+        self.client.post("/clock/off", {"pin": "1234", **VENUE})
+        entry.refresh_from_db()
+        self.assertEqual(entry.payable_minutes, 120)
+        locked = TimeEntry.objects.create(user=self.sam, bowl_id=1, clock_in=start, source="kiosk", note="",
+                                          payable_source="AUTO", created_at=start, is_locked=True)
+        self.client.post("/clock/off", {"pin": "1234", **VENUE})
+        locked.refresh_from_db()
+        self.assertIsNone(locked.clock_out)
+
+    def test_payable_minutes_round_to_quarter_hours(self):
+        from core.services import payable_minutes
+        t = timezone.now()
+        for mins, want in [(0, 0), (7, 0), (8, 15), (22, 15), (23, 30), (247, 240), (248, 255)]:
+            self.assertEqual(payable_minutes(t, t + timedelta(minutes=mins)), want, mins)
 
 
 class TabTests(Base):

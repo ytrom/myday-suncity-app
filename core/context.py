@@ -38,6 +38,7 @@ def myday(request):
         "today": timezone.localdate(),
         "counts": TabCounts(request) if staff else None,
         "writes_enabled": settings.WRITES_ENABLED,
+        "clock_writes_enabled": settings.CLOCK_WRITES_ENABLED,
         "leave_writes_enabled": settings.LEAVE_WRITES_ENABLED,
         "identity_test_mode": getattr(request, "identity_test_mode", False),
     }

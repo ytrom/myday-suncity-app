@@ -51,9 +51,12 @@ class TimeEntry(models.Model):
     bowl_id = models.IntegerField(null=True)
     clock_in = models.DateTimeField()
     clock_out = models.DateTimeField(null=True)
-    source = models.CharField(max_length=40, null=True)
-    note = models.TextField(null=True)
+    source = models.CharField(max_length=40)  # kiosk (login clock) or manual
+    note = models.TextField()
     payable_minutes = models.IntegerField(null=True)
+    payable_source = models.CharField(max_length=20)  # AUTO or MANUAL
+    payable_updated_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField()
     is_locked = models.BooleanField(default=False)
 
     class Meta:
