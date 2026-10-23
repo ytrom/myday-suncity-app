@@ -239,3 +239,7 @@ a.btn { text-decoration: none; box-sizing: border-box; }
 .toolhead-title { margin: 0; font: 400 24px/1.1 var(--display); letter-spacing: .01em; text-transform: uppercase; }
 .toolbar-close { display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 14px; border-radius: 999px; background: var(--navy); color: #fff; font-weight: 700; font-size: 14px; text-decoration: none; }
 .pill-version { font-weight: 500; letter-spacing: .02em; opacity: .8; margin-left: 2px; }
+.tool-section { margin-top: 12px; }
+.section-head .back { margin-top: 0; font-size: 14px; }
+.tool-section > #lane-grid > .lane-grid:first-child, .tool-section .already:first-of-type { margin-top: 8px; }
+.tool-section form > p { margin: 12px 0 0; }

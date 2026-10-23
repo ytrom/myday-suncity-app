@@ -1,10 +1,10 @@
 {% extends "core/tool_base.html" %}
 {% block title %}Lane {{ lane }}{% endblock %}
 {% block main %}
-  <a href="{% url 'marshal' %}" class="back">&larr; All lanes</a>
-  <section class="section" aria-labelledby="lane-title">
+  <section class="section tool-section" aria-labelledby="lane-title">
     <div class="section-head">
       <h2 id="lane-title">Lane {{ lane }}</h2>
+      <a href="{% url 'marshal' %}" class="back">&larr; All lanes</a>
     </div>
     {% if already %}
       <div class="already">
