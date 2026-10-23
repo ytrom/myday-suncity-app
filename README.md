@@ -31,7 +31,7 @@ Prep already done by Seawoz: Docker is installed, `/opt/myday/` exists, and `/op
 
 ```bash
 cd /opt/myday
-git clone <repo-url> app
+git clone https://github.com/ytrom/myday-suncity-app.git app
 cd app
 
 # Merge the template into the existing .env (keep BC_DB_PASSWORD), then:
