@@ -30,10 +30,7 @@
         <img src="{% static 'core/img/wordmark-white.png' %}" alt="Sun City Tenpin" class="wordmark">
         <div class="hero-right">
           <span class="pill">MYDAY</span>
-          <form method="post" action="{% url 'lock' %}">
-            {% csrf_token %}
-            <button class="avatar" aria-label="Lock MyDay" title="Lock">{{ staff.initials }}</button>
-          </form>
+          <a href="{% url 'details' %}" class="avatar{% if tab == 'details' %} active{% endif %}" aria-label="My details" title="My details">{{ staff.initials }}</a>
         </div>
       </div>
       <p class="hero-date">{{ today|date:"l j F" }}</p>

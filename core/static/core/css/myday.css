@@ -175,3 +175,13 @@ textarea.input { padding: 10px 12px; resize: none; }
 .lock-foot { margin-top: auto; padding-top: 32px; color: #fff; font-size: 14px; font-weight: 600; }
 
 @media (min-width: 521px) { .app { box-shadow: 0 0 0 1px var(--line-strong); } }
+
+/* My details */
+a.avatar { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-size: 15px; }
+.avatar.active { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.35); }
+.facts { margin: 14px 0 0; display: grid; gap: 8px; }
+.facts div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--grey-light); padding-bottom: 8px; }
+.facts dt { color: var(--grey); font-size: 13px; }
+.facts dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+.sublabel { margin-top: 20px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--grey); }
+a.btn { text-decoration: none; box-sizing: border-box; }

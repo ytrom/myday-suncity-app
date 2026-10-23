@@ -312,3 +312,58 @@ class TabTests(Base):
     def test_pwa_files(self):
         self.assertEqual(self.client.get("/manifest.webmanifest").json()["short_name"], "MyDay")
         self.assertEqual(self.client.get("/sw.js")["Service-Worker-Allowed"], "/")
+
+
+class DetailsTests(Base):
+    def setUp(self):
+        super().setUp()
+        User.objects.filter(id=self.sam.id).update(phone_number="0400 111 222")
+        self.ctx = self.signed_in()
+        self.ctx.enable()
+        self.addCleanup(self.ctx.disable)
+        self.unlock()
+
+    def form(self, **overrides):
+        data = {"phone": "0400 111 222", "address": "1 Lane St, Buderim", "emergency_name": "Alex Mason",
+                "emergency_phone": "0400 333 444", "emergency_relationship": "Partner"}
+        data.update(overrides)
+        return data
+
+    def test_avatar_opens_my_details_with_vensoft_phone(self):
+        self.assertContains(self.client.get("/myday"), 'href="/me"')
+        resp = self.client.get("/me")
+        self.assertContains(resp, "sam@suncitytenpin.com.au")
+        self.assertContains(resp, 'value="0400 111 222"')
+        self.assertContains(resp, "Lock MyDay")
+
+    def test_saving_sends_to_the_office_without_touching_vensoft(self):
+        resp = self.client.post("/me", self.form())
+        self.assertContains(resp, "sent to the office")
+        from core.models import DetailsUpdate
+        update = DetailsUpdate.objects.get()
+        self.assertEqual((update.address, update.emergency_relationship), ("1 Lane St, Buderim", "Partner"))
+        self.assertEqual(User.objects.get(id=self.sam.id).phone_number, "0400 111 222")
+        self.assertContains(self.client.get("/me"), 'value="Alex Mason"')
+
+    def test_saving_the_same_again_does_nothing(self):
+        self.client.post("/me", self.form())
+        self.assertContains(self.client.post("/me", self.form()), "Nothing changed")
+        from core.models import DetailsUpdate
+        self.assertEqual(DetailsUpdate.objects.count(), 1)
+
+    def test_bad_phone_and_missing_contact_name(self):
+        self.assertContains(self.client.post("/me", self.form(phone="call me")), "Check the phone numbers")
+        self.assertContains(self.client.post("/me", self.form(emergency_name="")), "emergency contact&#x27;s name")
+
+    def test_office_command_lists_and_marks_done(self):
+        from io import StringIO
+        from django.core.management import call_command
+        from core.models import DetailsUpdate
+        self.client.post("/me", self.form())
+        out = StringIO()
+        call_command("staff_details", stdout=out)
+        self.assertIn("Sam Mason", out.getvalue())
+        call_command("staff_details", done=DetailsUpdate.objects.get().id, stdout=StringIO())
+        out = StringIO()
+        call_command("staff_details", stdout=out)
+        self.assertIn("Nothing waiting", out.getvalue())

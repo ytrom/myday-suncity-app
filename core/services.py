@@ -21,7 +21,7 @@ from bc.models import (
     User,
 )
 
-from .models import PinAttempt, SiteCheck
+from .models import DetailsUpdate, PinAttempt, SiteCheck
 
 
 def today():
@@ -329,3 +329,24 @@ def _test_overlay(session, key):
                 ids.remove(x)
 
     return _Set()
+
+
+# --- My details ---------------------------------------------------------------
+
+DETAIL_FIELDS = ["phone", "address", "emergency_name", "emergency_phone", "emergency_relationship"]
+
+
+def latest_details(user):
+    """The last details this person sent, whether or not the office has copied them yet."""
+    return DetailsUpdate.objects.filter(user_id=user.id).first()
+
+
+def send_details(user, data):
+    """Save a details update for the office. Returns it, or None if nothing changed."""
+    last = latest_details(user)
+    current = {f: getattr(last, f) if last else "" for f in DETAIL_FIELDS}
+    if not last:
+        current["phone"] = user.phone_number or ""
+    if all(data[f] == current[f] for f in DETAIL_FIELDS):
+        return None
+    return DetailsUpdate.objects.create(user_id=user.id, **data)

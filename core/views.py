@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date
 
 from django.conf import settings
@@ -14,6 +15,7 @@ from .middleware import unlock_session
 
 ACTIONS = {"on": "Log on", "off": "Log off"}
 PENDING_SECONDS = 180
+PHONE = re.compile(r"\+?[0-9 ()-]{6,20}")
 
 
 def _greeting():
@@ -112,6 +114,31 @@ def rdo(request):
         form=form,
         min_date=timezone.localdate().isoformat(),
     )
+
+
+def details(request):
+    """My details: opened from the initials in the header."""
+    staff = request.staff
+    last = services.latest_details(staff)
+    notice = error = None
+    if request.method == "POST":
+        form = {f: " ".join(request.POST.get(f, "").split()) for f in services.DETAIL_FIELDS}
+        phones = [form["phone"], form["emergency_phone"]]
+        if any(p and not PHONE.fullmatch(p) for p in phones):
+            error = "Check the phone numbers. Use digits, spaces and + only."
+        elif form["emergency_phone"] and not form["emergency_name"]:
+            error = "Add your emergency contact's name."
+        else:
+            if services.send_details(staff, form):
+                notice = "Thanks. Your details have been sent to the office."
+                last = services.latest_details(staff)
+            else:
+                notice = "Nothing changed."
+    else:
+        form = {f: getattr(last, f) if last else "" for f in services.DETAIL_FIELDS}
+        if not last:
+            form["phone"] = staff.phone_number or ""
+    return _page(request, "core/details.html", "details", form=form, last=last, notice=notice, error=error)
 
 
 @require_GET

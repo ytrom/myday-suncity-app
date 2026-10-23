@@ -10,6 +10,7 @@ urlpatterns = [
     path("roster", views.roster, name="roster"),
     path("rdo", views.rdo, name="rdo"),
     path("messages", views.messages_tab, name="messages"),
+    path("me", views.details, name="details"),
     path("tabs", views.tabs, name="tabs"),
     path("shift-card", views.shift_card, name="shift_card"),
     path("clock/<str:action>/start", views.clock_start, name="clock_start"),

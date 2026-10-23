@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+{% block title %}My details{% endblock %}
+{% block main %}
+  <section class="card section-card" aria-labelledby="me-title">
+    <h2 id="me-title">My details</h2>
+    <p class="muted">Keep these up to date so we can reach you, or someone close to you, if we need to.</p>
+    {% if notice %}<p class="flash" role="status">{{ notice }}</p>{% endif %}
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+    <dl class="facts">
+      <div><dt>Name</dt><dd>{{ staff.full_name }}</dd></div>
+      <div><dt>Sign-in email</dt><dd>{{ staff.email }}</dd></div>
+    </dl>
+    <p class="muted small">Your name and sign-in email are changed by the office, because the email is how you sign in to MyDay.</p>
+
+    <form method="post" action="{% url 'details' %}" hx-boost="true">
+      {% csrf_token %}
+      <label for="me-phone" class="label">Mobile</label>
+      <input id="me-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" class="input" maxlength="40" value="{{ form.phone }}">
+      <label for="me-address" class="label">Home address</label>
+      <textarea id="me-address" name="address" rows="2" autocomplete="street-address" class="input" maxlength="300">{{ form.address }}</textarea>
+
+      <p class="label sublabel">Emergency contact</p>
+      <label for="me-ec-name" class="label">Name</label>
+      <input id="me-ec-name" name="emergency_name" class="input" autocomplete="off" maxlength="120" value="{{ form.emergency_name }}">
+      <div class="grid2">
+        <div>
+          <label for="me-ec-phone" class="label">Phone</label>
+          <input id="me-ec-phone" name="emergency_phone" type="tel" inputmode="tel" autocomplete="off" class="input" maxlength="40" value="{{ form.emergency_phone }}">
+        </div>
+        <div>
+          <label for="me-ec-rel" class="label">Relationship</label>
+          <input id="me-ec-rel" name="emergency_relationship" class="input" autocomplete="off" maxlength="60" placeholder="e.g. Partner" value="{{ form.emergency_relationship }}">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-wide">Save my details</button>
+    </form>
+    {% if last %}
+      <p class="hint">
+        {% if last.done_at %}Updated by the office {{ last.done_at|date:"j M" }}.{% else %}Sent {{ last.sent_at|date:"j M" }}. The office will update your record.{% endif %}
+      </p>
+    {% endif %}
+  </section>
+
+  <section class="section">
+    <form method="post" action="{% url 'lock' %}">
+      {% csrf_token %}
+      <button class="btn btn-ghost btn-wide">Lock MyDay</button>
+    </form>
+    <a class="btn btn-ghost btn-wide" href="/cdn-cgi/access/logout">Sign out of this phone</a>
+  </section>
+{% endblock %}
