@@ -243,6 +243,7 @@ class TabTests(Base):
         self.assertNotContains(resp, "Someone else's job")
         self.assertContains(resp, "1 new staff message")
         self.assertContains(resp, "1 to do")
+        self.assertContains(resp, "Practice only")
 
     def test_tick_task_in_test_mode(self):
         resp = self.client.post(f"/tasks/{self.task.id}/toggle")

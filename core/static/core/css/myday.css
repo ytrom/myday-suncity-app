@@ -190,3 +190,5 @@ a.btn { text-decoration: none; box-sizing: border-box; }
 .key-enter { margin-top: 12px; width: 100%; min-height: 52px; border-radius: 12px; border: 0; background: var(--blue); color: #fff; font: 700 16px Inter, system-ui, sans-serif; cursor: pointer; }
 .key-enter:disabled { opacity: .35; cursor: default; }
 .lock .key-enter { margin-top: 18px; border-radius: 999px; background: #fff; color: var(--navy); }
+
+.practice { margin-top: 14px; background: #FEF3C7; color: #78350F; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
