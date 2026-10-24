@@ -20,10 +20,8 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% block body %}
   <div class="app">
-    {% if identity_test_mode or not writes_enabled %}
-      <p class="testbar">
-        Test mode{% if identity_test_mode %} · signed in as {{ staff.email }}{% endif %}{% if not writes_enabled %} · {% if leave_writes_enabled %}only RDO / leave requests go to Vensoft{% else %}nothing is saved to Vensoft{% endif %}{% endif %}
-      </p>
+    {% if identity_test_mode %}
+      <p class="testbar">Test sign-in · signed in as {{ staff.email }}</p>
     {% endif %}
     <header class="hero">
       <div class="hero-top">

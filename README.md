@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.0.09** (24 Oct 2026): Test mode bar removed from the top (it only shows for the LAN test sign-in now).
 - **1.0.08** (24 Oct 2026): optional note for the mechanic on Lane Marshal (saved in NOTE, like the tablet).
 - **1.0.07** (24 Oct 2026): Re-spot opens a pin screen (tap the pins); saved as e.g. "Pins 3, 5".
 - **1.0.06** (24 Oct 2026): Mechanic and Lane Marshal cover the greeting and both rows of buttons; just the logo bar and the title with Close.
