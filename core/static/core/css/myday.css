@@ -249,3 +249,4 @@ a.btn { text-decoration: none; box-sizing: border-box; }
 .lane-head .back { justify-self: end; margin-top: 0; font-size: 14px; }
 .faults { gap: 4px; margin-top: 8px; }
 .already + form .faults, .flash + form .faults { margin-top: 8px; }
+.hero > .toolhead { margin-top: 14px; }

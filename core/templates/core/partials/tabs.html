@@ -20,15 +20,6 @@
     <span class="tab-label">Messages</span>
     <span class="tab-sub">{% with n=counts.unread_messages %}{% if n %}{{ n }} unread{% else %}All read{% endif %}{% endwith %}</span>
   </a>
-  {% if tab == "mechanic" or tab == "marshal" %}
-  <div class="toolhead">
-    <p class="toolhead-title">{% if tab == "mechanic" %}Mechanic{% else %}Lane Marshal{% endif %}</p>
-    <a href="{% url 'myday' %}" class="toolbar-close" aria-label="Close">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      Close
-    </a>
-  </div>
-  {% else %}
   <div class="tools" role="group" aria-label="Tools">
   <a href="{% url 'tasks' %}" class="tool{% if tab == 'tasks' %} active{% endif %}"{% if tab == 'tasks' %} aria-current="page"{% endif %}>
     <span class="tool-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span>
@@ -47,5 +38,4 @@
     <span class="tool-text"><span class="tool-label">More</span><span class="tool-sub">Coming soon</span></span>
   </span>
   </div>
-  {% endif %}
 </nav>

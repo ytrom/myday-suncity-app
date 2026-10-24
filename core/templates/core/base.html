@@ -33,9 +33,19 @@
           <a href="{% url 'details' %}" class="avatar{% if tab == 'details' %} active{% endif %}" aria-label="My details" title="My details">{{ staff.initials }}</a>
         </div>
       </div>
+      {% if tab == "mechanic" or tab == "marshal" %}
+      <div class="toolhead">
+        <p class="toolhead-title">{% if tab == "mechanic" %}Mechanic{% else %}Lane Marshal{% endif %}</p>
+        <a href="{% url 'myday' %}" class="toolbar-close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          Close
+        </a>
+      </div>
+      {% else %}
       <p class="hero-date">{{ today|date:"l j F" }}</p>
       <h1 class="hero-name">{{ greeting }}, {{ staff.first_name }}</h1>
       {% include "core/partials/tabs.html" %}
+      {% endif %}
     </header>
     <main id="main">
       {% block main %}{% endblock %}
