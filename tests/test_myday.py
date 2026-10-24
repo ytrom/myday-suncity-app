@@ -592,7 +592,7 @@ class MarshalTests(Base):
         self.assertContains(self.client.get("/marshal/4"), "Already reported")
         with mock.patch("core.lanes.report") as report:
             resp = self.client.post("/marshal/4", {"issue": "Off Spot"})
-        report.assert_called_once_with(4, "Off Spot", "")
+        report.assert_called_once_with(4, "Off Spot", "", "")
         self.assertRedirects(resp, "/marshal?sent=4", fetch_redirect_response=False)
         with mock.patch("core.lanes.report") as report:
             self.assertContains(self.client.post("/marshal/4", {"issue": "DROP TABLE"}), "Pick what")
@@ -607,8 +607,8 @@ class MarshalTests(Base):
         with mock.patch("core.lanes.report") as report:
             self.assertContains(self.client.post("/marshal/4?fault=Re-spot", {"issue": "Re-spot"}), "Tap the pins first")
             report.assert_not_called()
-            self.client.post("/marshal/4?fault=Re-spot", {"issue": "Re-spot", "pins": ["5", "3", "11"]})
-        report.assert_called_once_with(4, "Re-spot", "Pins 3, 5")
+            self.client.post("/marshal/4?fault=Re-spot", {"issue": "Re-spot", "pins": ["5", "3", "11"], "note": "front row"})
+        report.assert_called_once_with(4, "Re-spot", "Pins 3, 5", "front row")
 
     def test_switch_command(self):
         from io import StringIO

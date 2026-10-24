@@ -374,7 +374,7 @@ def marshal_lane(request, lane):
             error = "Tap the pins first."
         else:
             try:
-                lanes.report(lane, issue, option)
+                lanes.report(lane, issue, option, request.POST.get("note", ""))
                 return redirect(f"{reverse('marshal')}?sent={lane}")
             except Exception:
                 log.exception("Lane calls database error")
@@ -387,7 +387,8 @@ def marshal_lane(request, lane):
     return _page(request, "core/marshal_lane.html", "marshal", lane=lane, already=already, error=error,
                  faults=[(f, f in settings.MARSHAL_PIN_CALLS) for f in settings.MARSHAL_CALLS],
                  picked=request.POST.get("issue", ""), pin_fault=fault if pin_step else None,
-                 pin_rows=lanes.PIN_ROWS, picked_pins=request.POST.getlist("pins"))
+                 pin_rows=lanes.PIN_ROWS, picked_pins=request.POST.getlist("pins"),
+                 note=request.POST.get("note", ""), note_max=lanes.NOTE_MAX)
 
 
 @require_GET

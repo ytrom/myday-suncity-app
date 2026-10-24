@@ -70,11 +70,15 @@ def fix(call_id, who):
                   "WHERE id = %s AND fixed_at IS NULL", [(who or "MECH")[:FIXED_BY_MAX], call_id])
 
 
-def report(lane, issue, option=""):
+NOTE_MAX = 200
+
+
+def report(lane, issue, option="", note=""):
     """A new call from a lane marshal, as Lane Marshal's own screen would log it."""
+    note = " ".join((note or "").split())[:NOTE_MAX]
     with _cursor() as c:
         c.execute('INSERT INTO tech_control_troublecall ("ISSUE", "LANE", "OPTION", "NOTE", "DATE", "ID") '
-                  "VALUES (%s, %s, %s, '', NOW(), 'APP')", [issue, str(lane), option])
+                  "VALUES (%s, %s, %s, %s, NOW(), 'APP')", [issue, str(lane), option, note])
 
 
 PIN_ROWS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]]  # the pin deck as the marshal sees it

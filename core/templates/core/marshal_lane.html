@@ -14,7 +14,7 @@
     {% if already %}
       <div class="already">
         <p class="strong">Already reported:</p>
-        {% for c, age in already %}<p>{{ c.issue }}{% if c.option %} · {{ c.option }}{% endif %} · {{ age }} ago{% if c.attended_age is not None %} · mechanic on the way{% endif %}</p>{% endfor %}
+        {% for c, age in already %}<p>{{ c.issue }}{% if c.option %} · {{ c.option }}{% endif %}{% if c.note %} · {{ c.note }}{% endif %} · {{ age }} ago{% if c.attended_age is not None %} · mechanic on the way{% endif %}</p>{% endfor %}
         <p class="small">Sending below adds another call.</p>
       </div>
     {% endif %}
@@ -35,6 +35,7 @@
             </div>
           {% endfor %}
         </div>
+        <input class="lane-note" type="text" name="note" value="{{ note }}" maxlength="{{ note_max }}" placeholder="Note for the mechanic (optional)" autocomplete="off">
         <button class="btn btn-alert btn-big" type="submit">Notify mechanic</button>
       </form>
     {% else %}
@@ -49,6 +50,7 @@
             {% endif %}
           {% endfor %}
         </div>
+        <input class="lane-note" type="text" name="note" value="{{ note }}" maxlength="{{ note_max }}" placeholder="Note for the mechanic (optional)" autocomplete="off">
         <button class="btn btn-alert btn-big" type="submit">Notify mechanic</button>
       </form>
     {% endif %}
