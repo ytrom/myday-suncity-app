@@ -362,13 +362,19 @@ def marshal_lane(request, lane):
     if not 1 <= lane <= settings.LANE_COUNT:
         raise Http404
     error = None
+    # Faults with a pin screen (e.g. Re-spot) open it as a second step: ?fault=Re-spot
+    fault = request.GET.get("fault") or request.POST.get("issue", "")
+    pin_step = fault in settings.MARSHAL_PIN_CALLS
     if request.method == "POST":
         issue = request.POST.get("issue", "")
+        option = lanes.pins_option(request.POST.getlist("pins")) if pin_step else ""
         if issue not in settings.MARSHAL_CALLS:
             error = "Pick what's wrong first."
+        elif pin_step and not option:
+            error = "Tap the pins first."
         else:
             try:
-                lanes.report(lane, issue)
+                lanes.report(lane, issue, option)
                 return redirect(f"{reverse('marshal')}?sent={lane}")
             except Exception:
                 log.exception("Lane calls database error")
@@ -378,8 +384,10 @@ def marshal_lane(request, lane):
     except Exception:
         log.exception("Lane calls database error")
         already = []
-    return _page(request, "core/marshal_lane.html", "marshal", lane=lane, faults=settings.MARSHAL_CALLS,
-                 already=already, error=error, picked=request.POST.get("issue", ""))
+    return _page(request, "core/marshal_lane.html", "marshal", lane=lane, already=already, error=error,
+                 faults=[(f, f in settings.MARSHAL_PIN_CALLS) for f in settings.MARSHAL_CALLS],
+                 picked=request.POST.get("issue", ""), pin_fault=fault if pin_step else None,
+                 pin_rows=lanes.PIN_ROWS, picked_pins=request.POST.getlist("pins"))
 
 
 @require_GET

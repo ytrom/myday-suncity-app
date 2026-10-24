@@ -70,11 +70,20 @@ def fix(call_id, who):
                   "WHERE id = %s AND fixed_at IS NULL", [(who or "MECH")[:FIXED_BY_MAX], call_id])
 
 
-def report(lane, issue):
+def report(lane, issue, option=""):
     """A new call from a lane marshal, as Lane Marshal's own screen would log it."""
     with _cursor() as c:
         c.execute('INSERT INTO tech_control_troublecall ("ISSUE", "LANE", "OPTION", "NOTE", "DATE", "ID") '
-                  "VALUES (%s, %s, '', '', NOW(), 'APP')", [issue, str(lane)])
+                  "VALUES (%s, %s, %s, '', NOW(), 'APP')", [issue, str(lane), option])
+
+
+PIN_ROWS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]]  # the pin deck as the marshal sees it
+
+
+def pins_option(values):
+    """The pins picked on the pin screen, as stored in OPTION, e.g. "Pins 3, 5"."""
+    pins = sorted({int(v) for v in values if str(v).isdigit() and 1 <= int(v) <= 10})
+    return ("Pins " + ", ".join(map(str, pins))) if pins else ""
 
 
 def by_lane(calls):

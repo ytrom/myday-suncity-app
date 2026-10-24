@@ -1,3 +1,3 @@
 # MyDay's version, shown in the header. Bump it with every update that goes out:
 # the last part for fixes and small changes, the middle for new features.
-VERSION = "1.0.06"
+VERSION = "1.0.07"
