@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.0.03** (24 Oct 2026): lane report screen: What's wrong? / Lane # / All lanes on one line; fault buttons closer together.
 - **1.0.02** (24 Oct 2026): tighter Lane Marshal and Mechanic screens: no help text, "All lanes" beside the lane number.
 - **1.0.01** (24 Oct 2026): Mechanic and Lane Marshal keep the top tabs; their title and Close take the place of the second row of buttons.
 - **1.0.00** (24 Oct 2026): first numbered release. Second row of buttons (Shift Tasks, Mechanic, Lane Marshal, More).

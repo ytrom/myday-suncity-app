@@ -2,7 +2,8 @@
 {% block title %}Lane {{ lane }}{% endblock %}
 {% block main %}
   <section class="section tool-section" aria-labelledby="lane-title">
-    <div class="section-head">
+    <div class="lane-head">
+      <p class="muted small">What's wrong?</p>
       <h2 id="lane-title">Lane {{ lane }}</h2>
       <a href="{% url 'marshal' %}" class="back">&larr; All lanes</a>
     </div>
@@ -14,9 +15,8 @@
       </div>
     {% endif %}
     {% if error %}<p class="flash">{{ error }}</p>{% endif %}
-    <form method="post">
+    <form method="post" aria-label="What's wrong?">
       {% csrf_token %}
-      <p class="muted small">What's wrong?</p>
       <div class="faults">
         {% for f in faults %}
           <label class="fault"><input type="radio" name="issue" value="{{ f }}" required{% if f == picked %} checked{% endif %}><span>{{ f }}</span></label>

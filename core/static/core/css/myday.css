@@ -243,3 +243,9 @@ a.btn { text-decoration: none; box-sizing: border-box; }
 .section-head .back { margin-top: 0; font-size: 14px; }
 .tool-section > #lane-grid > .lane-grid:first-child, .tool-section .already:first-of-type { margin-top: 8px; }
 .tool-section form > p { margin: 12px 0 0; }
+.lane-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.lane-head p { margin: 0; }
+.lane-head h2 { text-align: center; }
+.lane-head .back { justify-self: end; margin-top: 0; font-size: 14px; }
+.faults { gap: 4px; margin-top: 8px; }
+.already + form .faults, .flash + form .faults { margin-top: 8px; }
