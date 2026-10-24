@@ -507,6 +507,11 @@ class MechanicTests(Base):
         self.assertEqual(self.client.get("/mechanic").status_code, 404)
         self.assertEqual(self.client.post("/mechanic/7/fix").status_code, 404)
 
+    def test_techs_get_it_from_their_vensoft_role(self):
+        Membership.objects.filter(user=self.sam).update(role="tech")
+        self.assertEqual(self.client.get("/mechanic").status_code, 200)
+        self.assertEqual(self.client.get("/marshal").status_code, 200)
+
     @override_settings(MECHANIC_ENABLED=False)
     def test_hidden_when_feature_off(self):
         self.make_mechanic()

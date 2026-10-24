@@ -150,6 +150,8 @@ LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
 # switched on with manage.py mechanic / manage.py marshal.
 MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)
 LANE_COUNT = int(env("MYDAY_LANES", "20"))
+# Vensoft roles (accounts_membership.role) that get Mechanic and Lane Marshal automatically.
+TECH_ROLES = [r.upper() for r in env_list("MYDAY_TECH_ROLES", "TECH")]
 # The faults a lane marshal can report: the same list and wording as the live Lane Marshal (checked 24 Oct 2026).
 MARSHAL_CALLS = env_list(
     "MYDAY_MARSHAL_CALLS",

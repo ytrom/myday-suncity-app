@@ -92,7 +92,7 @@ GRANT INSERT ON tech_control_troublecall TO myday_app;
 DO $$ BEGIN EXECUTE format('GRANT USAGE ON SEQUENCE %s TO myday_app', pg_get_serial_sequence('tech_control_troublecall', 'id')); END $$;
 ```
 
-Then set `MYDAY_MECHANIC=1` in `.env`, rebuild, and switch it on per tech:
+Then set `MYDAY_MECHANIC=1` in `.env` and rebuild. Staff whose Vensoft role (`accounts_membership.role`) is in `MYDAY_TECH_ROLES` (default `TECH`) get both screens automatically. To give them to anyone else:
 `docker compose exec myday python manage.py mechanic someone@example.com on`, and likewise `manage.py marshal` for the Lane Marshal screen. Calls reported from MyDay are logged with ID `APP` (the tablets use `TAB`).
 
 ## Cloudflare setup (Morty)
@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.1.00** (24 Oct 2026): techs get Mechanic and Lane Marshal automatically from their Vensoft role (MYDAY_TECH_ROLES, default TECH); manage.py mechanic/marshal still adds others.
 - **1.0.09** (24 Oct 2026): Test mode bar removed from the top (it only shows for the LAN test sign-in now).
 - **1.0.08** (24 Oct 2026): optional note for the mechanic on Lane Marshal (saved in NOTE, like the tablet).
 - **1.0.07** (24 Oct 2026): Re-spot opens a pin screen (tap the pins); saved as e.g. "Pins 3, 5".
