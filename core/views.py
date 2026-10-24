@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from datetime import date
 
@@ -15,6 +16,8 @@ from myday_project.version import VERSION
 
 from . import lanes, services
 from .middleware import unlock_session
+
+log = logging.getLogger(__name__)
 
 ACTIONS = {"on": "Log on", "off": "Log off"}
 PENDING_SECONDS = 180
@@ -286,6 +289,7 @@ def _calls(request, error=None):
     try:
         calls = lanes.open_calls()
     except Exception:  # Lane Marshal's database unreachable: say so, keep polling
+        log.exception("Lane calls database error")
         calls, error = [], error or "Can't reach the lane calls right now. Trying again..."
     return {
         "lanes_list": [(lane, [(c, lanes.elapsed(c.age), lanes.elapsed(c.attended_age)) for c in group])
@@ -321,6 +325,7 @@ def mechanic_action(request, call_id, action):
         else:
             return HttpResponseBadRequest()
     except Exception:
+        log.exception("Lane calls database error")
         error = "That didn't save. Try again."
     return render(request, "core/partials/mechanic_calls.html", _calls(request, error))
 
@@ -329,6 +334,7 @@ def _lane_grid(error=None):
     try:
         calls = lanes.open_calls()
     except Exception:
+        log.exception("Lane calls database error")
         calls, error = [], error or "Can't reach the lane calls right now. Trying again..."
     grid = []
     for n in range(1, settings.LANE_COUNT + 1):
@@ -365,10 +371,12 @@ def marshal_lane(request, lane):
                 lanes.report(lane, issue)
                 return redirect(f"{reverse('marshal')}?sent={lane}")
             except Exception:
+                log.exception("Lane calls database error")
                 error = "That didn't send. Try again, or use the Lane Marshal tablet."
     try:
         already = [(c, lanes.elapsed(c.age)) for c in lanes.open_calls() if c.lane.strip() == str(lane)]
     except Exception:
+        log.exception("Lane calls database error")
         already = []
     return _page(request, "core/marshal_lane.html", "marshal", lane=lane, faults=settings.MARSHAL_CALLS,
                  already=already, error=error, picked=request.POST.get("issue", ""))

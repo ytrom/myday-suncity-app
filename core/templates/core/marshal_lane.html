@@ -19,7 +19,7 @@
       {% csrf_token %}
       <div class="faults">
         {% for f in faults %}
-          <label class="fault"><input type="radio" name="issue" value="{{ f }}" required{% if f == picked %} checked{% endif %}><span>{{ f }}</span></label>
+          <label class="fault"><input type="radio" name="issue" value="{{ f }}"{% if f == picked %} checked{% endif %}><span>{{ f }}</span></label>
         {% endfor %}
       </div>
       <button class="btn btn-alert btn-big" type="submit">Call the mechanic</button>
