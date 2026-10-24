@@ -150,10 +150,11 @@ LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
 # switched on with manage.py mechanic / manage.py marshal.
 MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)
 LANE_COUNT = int(env("MYDAY_LANES", "20"))
-# The faults a lane marshal can report (same list as Lane Marshal's /marshall screen).
+# The faults a lane marshal can report: the same list and wording as the live Lane Marshal (checked 24 Oct 2026).
 MARSHAL_CALLS = env_list(
     "MYDAY_MARSHAL_CALLS",
-    "Full Set,Full Set on Second Ball,Ball Down the Back,Off Spot,Interlock,Scored – No Cycle,Machine Off,Other",
+    "Full Set,Full Set on Second Ball,Ball Down the Back,Off Spot,Interlock,Score-No-Cycle,Machine - Black Out,"
+    "Hanging Pins,Pin Out the Front,Deadwood,Re-spot,Re-rack,Other",
 )
 MECHANIC_POLL_SECONDS = int(env("MYDAY_MECHANIC_POLL_SECONDS", "5"))
 # Which membership/bowl MyDay acts for when a staff member has several.
