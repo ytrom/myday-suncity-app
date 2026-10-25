@@ -1,14 +1,7 @@
 {% extends "core/base.html" %}
 {% block title %}My Roster{% endblock %}
 {% block main %}
-  <nav class="weeknav" aria-label="Pay week" hx-boost="true">
-    <a href="{% url 'roster' %}?week={{ prev_week }}" class="weeknav-arrow" aria-label="Previous week">&lsaquo;</a>
-    <div class="weeknav-label">
-      <strong>{{ week_start|date:"D j M" }} – {{ week_end|date:"D j M" }}</strong>
-      <span class="muted small">{% if offset == 0 %}This pay week{% elif offset == -1 %}Last pay week{% elif offset == 1 %}Next pay week{% else %}Pay week{% endif %}{% if offset != 0 %} · <a href="{% url 'roster' %}">back to this week</a>{% endif %}</span>
-    </div>
-    <a href="{% url 'roster' %}?week={{ next_week }}" class="weeknav-arrow" aria-label="Next week">&rsaquo;</a>
-  </nav>
+  {% url 'roster' as week_url %}{% include "core/partials/weeknav.html" %}
 
   <section class="section" aria-labelledby="roster-title">
     <div class="section-head">
@@ -44,6 +37,35 @@
           </li>
         {% endfor %}
       </ul>
+      {% if notice %}<p class="flash">{{ notice }}</p>{% endif %}
+      {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+      {% if hours_state == "confirmed" %}
+        <p class="signoff signoff-good">✓ You confirmed these hours{% if confirmation %} on {{ confirmation.at|date:"D j M" }}{% endif %}.</p>
+      {% elif hours_state == "query" %}
+        <p class="signoff signoff-warn">You flagged these hours: “{{ confirmation.note }}”. Payroll will check them.</p>
+      {% elif hours_state == "changed" %}
+        <p class="signoff signoff-warn">Your hours have changed since you {% if confirmation.status == "query" %}flagged{% else %}confirmed{% endif %} them. Please check and confirm again.</p>
+      {% endif %}
+      {% if can_confirm and hours_state != "confirmed" %}
+        <form method="post" class="signoff-form">
+          {% csrf_token %}
+          <button class="btn btn-primary btn-wide" name="hours" value="confirm">Confirm my hours ({{ worked_total }})</button>
+          <details class="query"{% if error and not notice %} open{% endif %}>
+            <summary>Something's not right</summary>
+            <textarea name="note" rows="3" maxlength="300" placeholder="Which day, and what should it be?"></textarea>
+            <button class="btn btn-ghost btn-wide" name="hours" value="query">Send to payroll</button>
+          </details>
+        </form>
+      {% elif hours_state == "confirmed" %}
+        <form method="post" class="signoff-form">
+          {% csrf_token %}
+          <details class="query">
+            <summary>Something's not right</summary>
+            <textarea name="note" rows="3" maxlength="300" placeholder="Which day, and what should it be?"></textarea>
+            <button class="btn btn-ghost btn-wide" name="hours" value="query">Send to payroll</button>
+          </details>
+        </form>
+      {% endif %}
     {% else %}
       <p class="empty">No hours logged this week.</p>
     {% endif %}

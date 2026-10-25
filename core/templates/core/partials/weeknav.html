@@ -1,0 +1,8 @@
+  <nav class="weeknav" aria-label="Pay week" hx-boost="true">
+    <a href="{{ week_url }}?week={{ prev_week }}" class="weeknav-arrow" aria-label="Previous week">&lsaquo;</a>
+    <div class="weeknav-label">
+      <strong>{{ week_start|date:"D j M" }} – {{ week_end|date:"D j M" }}</strong>
+      <span class="muted small">{% if offset == 0 %}This pay week{% elif offset == -1 %}Last pay week{% elif offset == 1 %}Next pay week{% else %}Pay week{% endif %}{% if offset != 0 %} · <a href="{{ week_url }}?week=0">back to this week</a>{% endif %}</span>
+    </div>
+    <a href="{{ week_url }}?week={{ next_week }}" class="weeknav-arrow" aria-label="Next week">&rsaquo;</a>
+  </nav>

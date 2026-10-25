@@ -1,4 +1,5 @@
 """Queries and rules for MyDay. Views stay thin; everything that touches BowlControl is here."""
+import hashlib
 import ipaddress
 import math
 from datetime import timedelta
@@ -20,7 +21,7 @@ from bc.models import (
     User,
 )
 
-from .models import DetailsUpdate, PinAttempt, SiteCheck, StaffSetting
+from .models import DetailsUpdate, HoursConfirmation, PinAttempt, SiteCheck, StaffSetting
 from .pins import pin_matches
 
 
@@ -275,9 +276,63 @@ def hours_worked(user, start, end):
         else:
             minutes = int((now - e.clock_in).total_seconds() // 60)
         total += minutes
-        rows.append({"day": day, "clock_in": e.clock_in, "clock_out": e.clock_out, "minutes": minutes,
+        rows.append({"id": e.id, "day": day, "clock_in": e.clock_in, "clock_out": e.clock_out, "minutes": minutes,
                      "hours": f"{minutes // 60}h {minutes % 60:02d}m", "rostered": day in rostered})
     return rows, total
+
+
+def fmt_minutes(total):
+    return f"{total // 60}h {total % 60:02d}m"
+
+
+def hours_fingerprint(rows):
+    raw = "|".join(f"{r['id']}:{r['clock_in'].isoformat()}:{r['clock_out'] and r['clock_out'].isoformat()}:{r['minutes']}"
+                   for r in rows)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def hours_status(user_id, week_start, rows):
+    """Where this person's sign-off stands for the week: (state, confirmation).
+    state is none / confirmed / query / changed (confirmed, but the hours have changed since)."""
+    c = HoursConfirmation.objects.filter(user_id=user_id, week_start=week_start).first()
+    if not c:
+        return "none", None
+    if c.fingerprint != hours_fingerprint(rows):
+        return "changed", c
+    return c.status, c
+
+
+def confirm_hours(user, week_start, rows, status, note=""):
+    total = sum(r["minutes"] for r in rows)
+    HoursConfirmation.objects.update_or_create(
+        user_id=user.id, week_start=week_start,
+        defaults={"status": status, "note": " ".join((note or "").split())[:300],
+                  "total_minutes": total, "fingerprint": hours_fingerprint(rows)},
+    )
+
+
+def is_manager(user):
+    if not user:
+        return False
+    roles = {(r or "").strip().upper() for r in Membership.objects.filter(user_id=user.id).values_list("role", flat=True)}
+    return bool(roles & set(settings.MANAGER_ROLES))
+
+
+def payroll_week(start, end):
+    """Everyone with hours or a shift in the pay week: name, hours, sign-off state. Sorted by name."""
+    users = {}
+    for e in TimeEntry.objects.filter(clock_in__date__gte=start, clock_in__date__lte=end).values_list("user_id", flat=True):
+        users[e] = True
+    for u in ShiftAssignment.objects.filter(shift__date__gte=start, shift__date__lte=end).values_list("user_id", flat=True):
+        users[u] = True
+    people = []
+    for user in User.objects.filter(id__in=users).order_by("first_name", "last_name"):
+        rows, total = hours_worked(user, start, end)
+        state, c = hours_status(user.id, start, rows)
+        people.append({"user": user, "total": fmt_minutes(total), "minutes": total, "state": state,
+                       "note": c.note if c else "", "extra": sum(1 for r in rows if not r["rostered"]),
+                       "open": any(not r["clock_out"] for r in rows)})
+    return people
 
 
 def confirm_shift(user, assignment_id, session):

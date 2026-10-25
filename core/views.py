@@ -80,18 +80,54 @@ def tasks(request):
     return _page(request, "core/tasks.html", "tasks", tasks=services.tasks_for(request.staff, request.session))
 
 
-@require_GET
-def roster(request):
-    """One pay week (Friday to Thursday): my shifts and the hours I logged. ?week=-1 is last week."""
+def _week_offset(request, default=0):
     try:
-        offset = max(-52, min(52, int(request.GET.get("week", "0"))))
+        return max(-52, min(52, int(request.GET.get("week", default))))
     except ValueError:
-        offset = 0
+        return default
+
+
+def roster(request):
+    """One pay week (Friday to Thursday): my shifts, the hours I logged, and my sign-off for payroll.
+    ?week=-1 is last week."""
+    offset = _week_offset(request)
     start, end = services.pay_week(offset)
     worked, total = services.hours_worked(request.staff, start, end)
+    notice = error = None
+    if request.method == "POST":
+        action = request.POST.get("hours")
+        if not worked or any(not w["clock_out"] for w in worked):
+            error = "You can confirm once you've logged off."
+        elif action == "confirm":
+            services.confirm_hours(request.staff, start, worked, "confirmed")
+            notice = "Thanks. Your hours for this week are confirmed."
+        elif action == "query":
+            note = request.POST.get("note", "").strip()
+            if not note:
+                error = "Tell us what's not right, e.g. the day and the right times."
+            else:
+                services.confirm_hours(request.staff, start, worked, "query", note)
+                notice = "Thanks. Payroll will check your hours."
+    state, confirmation = services.hours_status(request.staff.id, start, worked)
     return _page(request, "core/roster.html", "roster", rows=_roster_rows(request, start, end), worked=worked,
-                 worked_total=f"{total // 60}h {total % 60:02d}m", week_start=start, week_end=end,
-                 offset=offset, prev_week=offset - 1, next_week=offset + 1)
+                 worked_total=services.fmt_minutes(total), week_start=start, week_end=end,
+                 offset=offset, prev_week=offset - 1, next_week=offset + 1,
+                 hours_state=state, confirmation=confirmation, notice=notice, error=error,
+                 can_confirm=bool(worked) and all(w["clock_out"] for w in worked) and start <= timezone.localdate())
+
+
+@require_GET
+def payroll(request):
+    """Managers: everyone's hours for a pay week and whether they've confirmed them. Defaults to last week."""
+    if not services.is_manager(request.staff):
+        raise Http404
+    offset = _week_offset(request, -1)
+    start, end = services.pay_week(offset)
+    people = services.payroll_week(start, end)
+    return _page(request, "core/payroll.html", "payroll", people=people, week_start=start, week_end=end,
+                 offset=offset, prev_week=offset - 1, next_week=offset + 1,
+                 confirmed=sum(1 for p in people if p["state"] == "confirmed"),
+                 total=services.fmt_minutes(sum(p["minutes"] for p in people)))
 
 
 def rdo(request):

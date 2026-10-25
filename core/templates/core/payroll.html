@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% block title %}Payroll{% endblock %}
+{% block main %}
+  {% url 'payroll' as week_url %}{% include "core/partials/weeknav.html" %}
+
+  <section class="section" aria-labelledby="payroll-title">
+    <div class="section-head">
+      <h2 id="payroll-title">Payroll</h2>
+      {% if people %}<span class="muted small">{{ confirmed }} of {{ people|length }} confirmed · {{ total }}</span>{% endif %}
+    </div>
+    {% if people %}
+      <ul class="list card">
+        {% for p in people %}
+          <li class="item payroll-row">
+            <div class="grow">
+              <p class="strong">{{ p.user.full_name }}</p>
+              <p class="muted small">{{ p.total }}{% if p.extra %} · {{ p.extra }} not rostered{% endif %}{% if p.open %} · still logged on{% endif %}</p>
+              {% if p.note %}<p class="small query-note">“{{ p.note }}”</p>{% endif %}
+            </div>
+            {% if p.state == "confirmed" %}<span class="chip chip-good">Confirmed</span>
+            {% elif p.state == "query" %}<span class="chip chip-urgent">Query</span>
+            {% elif p.state == "changed" %}<span class="chip chip-warn">Changed</span>
+            {% else %}<span class="chip chip-plain">Not yet</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="muted small">Changed: the hours were edited after that person confirmed, so they need to confirm again.</p>
+    {% else %}
+      <p class="empty">No hours or shifts this week.</p>
+    {% endif %}
+  </section>
+{% endblock %}

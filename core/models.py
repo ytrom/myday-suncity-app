@@ -56,3 +56,24 @@ class StaffSetting(models.Model):
     location_check = models.BooleanField(default=False)
     mechanic = models.BooleanField(default=False)
     marshal = models.BooleanField(default=False)
+
+
+class HoursConfirmation(models.Model):
+    """A staff member's sign-off on their hours for one pay week (Friday to Thursday), for payroll.
+
+    fingerprint is taken from the time-log entries they saw, so if the hours change afterwards
+    (an edit in Vensoft, a late Log off) the confirmation shows as out of date.
+    """
+
+    STATUSES = [("confirmed", "Confirmed"), ("query", "Query")]
+
+    user_id = models.IntegerField(db_index=True)
+    week_start = models.DateField()
+    status = models.CharField(max_length=10, choices=STATUSES)
+    note = models.CharField(max_length=300, blank=True)
+    total_minutes = models.IntegerField()
+    fingerprint = models.CharField(max_length=64)
+    at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("user_id", "week_start")]

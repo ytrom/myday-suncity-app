@@ -265,3 +265,14 @@ a.fault { text-decoration: none; color: inherit; }
 .weeknav-arrow { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1; text-decoration: none; color: var(--navy); background: var(--tint); flex-shrink: 0; }
 .weeknav-label { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
 .weeknav-label strong { color: var(--navy); font-size: 15px; }
+.signoff { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; font-size: 14px; }
+.signoff-good { background: var(--good-bg); color: var(--good); font-weight: 600; }
+.signoff-warn { background: var(--warn-soft); color: var(--warn); }
+.signoff-form { margin-top: 4px; }
+.query { margin-top: 10px; }
+.query summary { cursor: pointer; color: var(--blue); font-weight: 600; font-size: 14px; padding: 6px 0; }
+.query textarea { width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line-strong); font: inherit; font-size: 16px; }
+.query .btn-wide { margin-top: 8px; }
+.payroll-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.payroll-row p { margin: 0; }
+.query-note { color: #B42318; margin-top: 2px !important; }

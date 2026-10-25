@@ -8,6 +8,7 @@ urlpatterns = [
     path("lock", views.lock, name="lock"),
     path("myday", views.myday, name="myday"),
     path("tasks", views.tasks, name="tasks"),
+    path("payroll", views.payroll, name="payroll"),
     path("roster", views.roster, name="roster"),
     path("rdo", views.rdo, name="rdo"),
     path("messages", views.messages_tab, name="messages"),

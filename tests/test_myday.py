@@ -289,6 +289,39 @@ class TabTests(Base):
         self.assertContains(resp, "4h 00m · not rostered")
         self.assertContains(resp, "10:00 a.m. – 2:08 p.m.")
 
+    def _worked_this_week(self):
+        from core.services import pay_week
+        start = timezone.make_aware(timezone.datetime.combine(pay_week(0)[0], time(10)))
+        return TimeEntry.objects.create(user=self.sam, bowl_id=1, clock_in=start, clock_out=start + timedelta(hours=4),
+                                        source="kiosk", note="", payable_minutes=240, payable_source="AUTO",
+                                        created_at=start, is_locked=False)
+
+    def test_confirm_hours_and_reconfirm_after_a_change(self):
+        entry = self._worked_this_week()
+        self.assertContains(self.client.get("/roster"), "Confirm my hours (4h 00m)")
+        self.assertContains(self.client.post("/roster?week=0", {"hours": "confirm"}), "Your hours for this week are confirmed")
+        self.assertContains(self.client.get("/roster"), "You confirmed these hours")
+        TimeEntry.objects.filter(id=entry.id).update(payable_minutes=255)
+        resp = self.client.get("/roster")
+        self.assertContains(resp, "changed since you confirmed")
+        self.assertContains(resp, "Confirm my hours (4h 15m)")
+
+    def test_query_needs_a_note(self):
+        self._worked_this_week()
+        self.assertContains(self.client.post("/roster", {"hours": "query"}), "Tell us what")
+        self.assertContains(self.client.post("/roster", {"hours": "query", "note": "Tue was 5 to 10"}), "Payroll will check")
+        self.assertContains(self.client.get("/roster"), "Tue was 5 to 10")
+
+    def test_payroll_for_managers_only(self):
+        self._worked_this_week()
+        self.assertEqual(self.client.get("/payroll").status_code, 404)
+        self.client.post("/roster", {"hours": "confirm"})
+        Membership.objects.create(user=self.sam, role="MANAGER", bowl_id=1)
+        self.assertContains(self.client.get("/myday"), "Hours sign-off")
+        resp = self.client.get("/payroll?week=0")
+        self.assertContains(resp, "Sam Mason")
+        self.assertContains(resp, "1 of 1 confirmed")
+
     def test_pay_week_runs_friday_to_thursday(self):
         from core.services import pay_week
         first, last = pay_week(0)

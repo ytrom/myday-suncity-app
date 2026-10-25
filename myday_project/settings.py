@@ -152,6 +152,8 @@ MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)
 LANE_COUNT = int(env("MYDAY_LANES", "20"))
 # Vensoft roles (accounts_membership.role) that get Mechanic and Lane Marshal automatically.
 TECH_ROLES = [r.upper() for r in env_list("MYDAY_TECH_ROLES", "TECH")]
+# Vensoft roles that get the Payroll screen (who has confirmed their hours each pay week).
+MANAGER_ROLES = [r.upper() for r in env_list("MYDAY_MANAGER_ROLES", "MANAGER")]
 # The faults a lane marshal can report: the same list and wording as the live Lane Marshal (checked 24 Oct 2026).
 MARSHAL_CALLS = env_list(
     "MYDAY_MARSHAL_CALLS",
