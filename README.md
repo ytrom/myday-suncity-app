@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.3.01** (25 Oct 2026): confirm each shift's hours (works while still logged on for today), plus Confirm all; Payroll shows "2 of 3" for part-confirmed weeks.
 - **1.3.00** (25 Oct 2026): staff confirm their hours each pay week (or flag what's wrong); managers get a Payroll screen showing who has confirmed. Stored in MyDay, not Vensoft.
 - **1.2.01** (25 Oct 2026): My Roster shows one pay week (Friday to Thursday) with arrows for earlier and later weeks.
 - **1.2.00** (25 Oct 2026): My Roster shows Hours worked for the last 2 weeks from the time log, including days you weren't rostered (marked Extra).

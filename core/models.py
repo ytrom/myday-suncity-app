@@ -59,11 +59,8 @@ class StaffSetting(models.Model):
 
 
 class HoursConfirmation(models.Model):
-    """A staff member's sign-off on their hours for one pay week (Friday to Thursday), for payroll.
-
-    fingerprint is taken from the time-log entries they saw, so if the hours change afterwards
-    (an edit in Vensoft, a late Log off) the confirmation shows as out of date.
-    """
+    """A staff member's "something's not right" note on their hours for one pay week (Friday to
+    Thursday), for payroll. (Confirming is per shift: EntryConfirmation.) status is "query"."""
 
     STATUSES = [("confirmed", "Confirmed"), ("query", "Query")]
 
@@ -77,3 +74,13 @@ class HoursConfirmation(models.Model):
 
     class Meta:
         unique_together = [("user_id", "week_start")]
+
+
+class EntryConfirmation(models.Model):
+    """A staff member marking one time-log entry (one shift's Log on / Log off) as correct, for payroll.
+    fingerprint is the entry as they saw it; if it's edited afterwards it needs confirming again."""
+
+    user_id = models.IntegerField(db_index=True)
+    entry_id = models.IntegerField(unique=True)
+    fingerprint = models.CharField(max_length=64)
+    at = models.DateTimeField(auto_now=True)

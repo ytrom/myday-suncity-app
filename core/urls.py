@@ -9,6 +9,7 @@ urlpatterns = [
     path("myday", views.myday, name="myday"),
     path("tasks", views.tasks, name="tasks"),
     path("payroll", views.payroll, name="payroll"),
+    path("hours/<int:entry_id>/confirm", views.hours_confirm, name="hours_confirm"),
     path("roster", views.roster, name="roster"),
     path("rdo", views.rdo, name="rdo"),
     path("messages", views.messages_tab, name="messages"),

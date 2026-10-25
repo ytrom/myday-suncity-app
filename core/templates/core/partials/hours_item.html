@@ -1,0 +1,17 @@
+<li id="hours-{{ w.id }}" class="card roster-row">
+  <div class="datebox">
+    <span class="dow">{{ w.day|date:"D"|upper }}</span>
+    <span class="day">{{ w.day|date:"j" }}</span>
+  </div>
+  <div class="grow">
+    <p class="roster-time">{{ w.clock_in|time:"g:i a" }} – {% if w.clock_out %}{{ w.clock_out|time:"g:i a" }}{% else %}now{% endif %}</p>
+    <p class="muted small">{{ w.hours }}{% if not w.rostered %} · not rostered{% endif %}{% if w.confirmed == "changed" %} · changed since you confirmed{% endif %}</p>
+  </div>
+  {% if not w.clock_out %}
+    <span class="chip chip-good">On now</span>
+  {% elif w.confirmed == "yes" %}
+    <span class="chip chip-good">Confirmed</span>
+  {% else %}
+    <button class="btn btn-primary btn-small" hx-post="{% url 'hours_confirm' w.id %}" hx-target="#hours-{{ w.id }}" hx-swap="outerHTML">Confirm</button>
+  {% endif %}
+</li>

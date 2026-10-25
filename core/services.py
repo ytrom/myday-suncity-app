@@ -21,7 +21,7 @@ from bc.models import (
     User,
 )
 
-from .models import DetailsUpdate, HoursConfirmation, PinAttempt, SiteCheck, StaffSetting
+from .models import DetailsUpdate, EntryConfirmation, HoursConfirmation, PinAttempt, SiteCheck, StaffSetting
 from .pins import pin_matches
 
 
@@ -285,29 +285,42 @@ def fmt_minutes(total):
     return f"{total // 60}h {total % 60:02d}m"
 
 
-def hours_fingerprint(rows):
-    raw = "|".join(f"{r['id']}:{r['clock_in'].isoformat()}:{r['clock_out'] and r['clock_out'].isoformat()}:{r['minutes']}"
-                   for r in rows)
+def entry_fingerprint(row):
+    raw = f"{row['id']}:{row['clock_in'].isoformat()}:{row['clock_out'] and row['clock_out'].isoformat()}:{row['minutes']}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def hours_status(user_id, week_start, rows):
-    """Where this person's sign-off stands for the week: (state, confirmation).
-    state is none / confirmed / query / changed (confirmed, but the hours have changed since)."""
-    c = HoursConfirmation.objects.filter(user_id=user_id, week_start=week_start).first()
-    if not c:
-        return "none", None
-    if c.fingerprint != hours_fingerprint(rows):
-        return "changed", c
-    return c.status, c
+def mark_confirmations(user_id, rows):
+    """Sets row["confirmed"] to yes / changed (confirmed, then edited) / no, and row["can_confirm"]."""
+    seen = dict(EntryConfirmation.objects.filter(user_id=user_id, entry_id__in=[r["id"] for r in rows])
+                .values_list("entry_id", "fingerprint"))
+    for r in rows:
+        fp = seen.get(r["id"])
+        r["confirmed"] = "no" if fp is None else ("yes" if fp == entry_fingerprint(r) else "changed")
+        r["can_confirm"] = bool(r["clock_out"]) and r["confirmed"] != "yes"
+    return rows
 
 
-def confirm_hours(user, week_start, rows, status, note=""):
-    total = sum(r["minutes"] for r in rows)
+def confirm_entries(user, rows, entry_ids=None):
+    """Mark my finished entries correct (all of `rows`, or just `entry_ids`). Returns how many."""
+    n = 0
+    for r in rows:
+        if r["clock_out"] and (entry_ids is None or r["id"] in entry_ids):
+            EntryConfirmation.objects.update_or_create(
+                entry_id=r["id"], defaults={"user_id": user.id, "fingerprint": entry_fingerprint(r)})
+            n += 1
+    return n
+
+
+def week_query(user_id, week_start):
+    return HoursConfirmation.objects.filter(user_id=user_id, week_start=week_start, status="query").first()
+
+
+def send_query(user, week_start, rows, note):
     HoursConfirmation.objects.update_or_create(
         user_id=user.id, week_start=week_start,
-        defaults={"status": status, "note": " ".join((note or "").split())[:300],
-                  "total_minutes": total, "fingerprint": hours_fingerprint(rows)},
+        defaults={"status": "query", "note": " ".join((note or "").split())[:300],
+                  "total_minutes": sum(r["minutes"] for r in rows), "fingerprint": ""},
     )
 
 
@@ -328,9 +341,21 @@ def payroll_week(start, end):
     people = []
     for user in User.objects.filter(id__in=users).order_by("first_name", "last_name"):
         rows, total = hours_worked(user, start, end)
-        state, c = hours_status(user.id, start, rows)
+        mark_confirmations(user.id, rows)
+        finished = [r for r in rows if r["clock_out"]]
+        done = sum(1 for r in finished if r["confirmed"] == "yes")
+        q = week_query(user.id, start)
+        if q:
+            state = "query"
+        elif any(r["confirmed"] == "changed" for r in finished):
+            state = "changed"
+        elif finished and done == len(finished):
+            state = "confirmed"
+        else:
+            state = "partial" if done else "none"
         people.append({"user": user, "total": fmt_minutes(total), "minutes": total, "state": state,
-                       "note": c.note if c else "", "extra": sum(1 for r in rows if not r["rostered"]),
+                       "done": done, "shifts": len(finished), "note": q.note if q else "",
+                       "extra": sum(1 for r in rows if not r["rostered"]),
                        "open": any(not r["clock_out"] for r in rows)})
     return people
 

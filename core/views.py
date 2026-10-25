@@ -12,7 +12,7 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
-from bc.models import ShiftAssignment
+from bc.models import ShiftAssignment, TimeEntry
 from myday_project.version import VERSION
 
 from . import lanes, services
@@ -96,24 +96,36 @@ def roster(request):
     notice = error = None
     if request.method == "POST":
         action = request.POST.get("hours")
-        if not worked or any(not w["clock_out"] for w in worked):
-            error = "You can confirm once you've logged off."
-        elif action == "confirm":
-            services.confirm_hours(request.staff, start, worked, "confirmed")
-            notice = "Thanks. Your hours for this week are confirmed."
+        if action == "confirm_all":
+            if services.confirm_entries(request.staff, worked):
+                notice = "Thanks. Your hours are confirmed."
         elif action == "query":
             note = request.POST.get("note", "").strip()
             if not note:
                 error = "Tell us what's not right, e.g. the day and the right times."
-            else:
-                services.confirm_hours(request.staff, start, worked, "query", note)
+            elif worked:
+                services.send_query(request.staff, start, worked, note)
                 notice = "Thanks. Payroll will check your hours."
-    state, confirmation = services.hours_status(request.staff.id, start, worked)
+    services.mark_confirmations(request.staff.id, worked)
+    query = services.week_query(request.staff.id, start)
     return _page(request, "core/roster.html", "roster", rows=_roster_rows(request, start, end), worked=worked,
                  worked_total=services.fmt_minutes(total), week_start=start, week_end=end,
                  offset=offset, prev_week=offset - 1, next_week=offset + 1,
-                 hours_state=state, confirmation=confirmation, notice=notice, error=error,
-                 can_confirm=bool(worked) and all(w["clock_out"] for w in worked) and start <= timezone.localdate())
+                 query=query, notice=notice, error=error,
+                 to_confirm=sum(1 for w in worked if w["can_confirm"]))
+
+
+@require_POST
+def hours_confirm(request, entry_id):
+    """Confirm one shift's hours from My Roster (HTMX: re-renders that row)."""
+    entry = TimeEntry.objects.filter(id=entry_id, user_id=request.staff.id).first()
+    if not entry:
+        raise Http404
+    day = timezone.localtime(entry.clock_in).date()
+    rows, _ = services.hours_worked(request.staff, day, day)
+    services.confirm_entries(request.staff, rows, {entry_id})
+    row = next(r for r in services.mark_confirmations(request.staff.id, rows) if r["id"] == entry_id)
+    return render(request, "core/partials/hours_item.html", {"w": row})
 
 
 @require_GET

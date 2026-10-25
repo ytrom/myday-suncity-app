@@ -23,49 +23,22 @@
     </div>
     {% if worked %}
       <ul class="stack">
-        {% for w in worked %}
-          <li class="card roster-row">
-            <div class="datebox">
-              <span class="dow">{{ w.day|date:"D"|upper }}</span>
-              <span class="day">{{ w.day|date:"j" }}</span>
-            </div>
-            <div class="grow">
-              <p class="roster-time">{{ w.clock_in|time:"g:i a" }} – {% if w.clock_out %}{{ w.clock_out|time:"g:i a" }}{% else %}now{% endif %}</p>
-              <p class="muted small">{{ w.hours }}{% if not w.rostered %} · not rostered{% endif %}</p>
-            </div>
-            {% if not w.clock_out %}<span class="chip chip-good">On now</span>{% elif not w.rostered %}<span class="chip chip-warn">Extra</span>{% endif %}
-          </li>
-        {% endfor %}
+        {% for w in worked %}{% include "core/partials/hours_item.html" %}{% endfor %}
       </ul>
       {% if notice %}<p class="flash">{{ notice }}</p>{% endif %}
       {% if error %}<p class="flash">{{ error }}</p>{% endif %}
-      {% if hours_state == "confirmed" %}
-        <p class="signoff signoff-good">✓ You confirmed these hours{% if confirmation %} on {{ confirmation.at|date:"D j M" }}{% endif %}.</p>
-      {% elif hours_state == "query" %}
-        <p class="signoff signoff-warn">You flagged these hours: “{{ confirmation.note }}”. Payroll will check them.</p>
-      {% elif hours_state == "changed" %}
-        <p class="signoff signoff-warn">Your hours have changed since you {% if confirmation.status == "query" %}flagged{% else %}confirmed{% endif %} them. Please check and confirm again.</p>
-      {% endif %}
-      {% if can_confirm and hours_state != "confirmed" %}
-        <form method="post" class="signoff-form">
-          {% csrf_token %}
-          <button class="btn btn-primary btn-wide" name="hours" value="confirm">Confirm my hours ({{ worked_total }})</button>
-          <details class="query"{% if error and not notice %} open{% endif %}>
-            <summary>Something's not right</summary>
-            <textarea name="note" rows="3" maxlength="300" placeholder="Which day, and what should it be?"></textarea>
-            <button class="btn btn-ghost btn-wide" name="hours" value="query">Send to payroll</button>
-          </details>
-        </form>
-      {% elif hours_state == "confirmed" %}
-        <form method="post" class="signoff-form">
-          {% csrf_token %}
-          <details class="query">
-            <summary>Something's not right</summary>
-            <textarea name="note" rows="3" maxlength="300" placeholder="Which day, and what should it be?"></textarea>
-            <button class="btn btn-ghost btn-wide" name="hours" value="query">Send to payroll</button>
-          </details>
-        </form>
-      {% endif %}
+      {% if query %}<p class="signoff signoff-warn">You flagged these hours: “{{ query.note }}”. Payroll will check them.</p>{% endif %}
+      <form method="post" class="signoff-form">
+        {% csrf_token %}
+        {% if to_confirm > 1 %}
+          <button class="btn btn-primary btn-wide" name="hours" value="confirm_all">Confirm all my shifts</button>
+        {% endif %}
+        <details class="query"{% if error %} open{% endif %}>
+          <summary>Something's not right</summary>
+          <textarea name="note" rows="3" maxlength="300" placeholder="Which day, and what should it be?"></textarea>
+          <button class="btn btn-ghost btn-wide" name="hours" value="query">Send to payroll</button>
+        </details>
+      </form>
     {% else %}
       <p class="empty">No hours logged this week.</p>
     {% endif %}

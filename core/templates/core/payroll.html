@@ -6,7 +6,7 @@
   <section class="section" aria-labelledby="payroll-title">
     <div class="section-head">
       <h2 id="payroll-title">Payroll</h2>
-      {% if people %}<span class="muted small">{{ confirmed }} of {{ people|length }} confirmed · {{ total }}</span>{% endif %}
+      {% if people %}<span class="muted small">{{ confirmed }} of {{ people|length }} all confirmed · {{ total }}</span>{% endif %}
     </div>
     {% if people %}
       <ul class="list card">
@@ -20,11 +20,12 @@
             {% if p.state == "confirmed" %}<span class="chip chip-good">Confirmed</span>
             {% elif p.state == "query" %}<span class="chip chip-urgent">Query</span>
             {% elif p.state == "changed" %}<span class="chip chip-warn">Changed</span>
+            {% elif p.state == "partial" %}<span class="chip chip-warn">{{ p.done }} of {{ p.shifts }}</span>
             {% else %}<span class="chip chip-plain">Not yet</span>{% endif %}
           </li>
         {% endfor %}
       </ul>
-      <p class="muted small">Changed: the hours were edited after that person confirmed, so they need to confirm again.</p>
+      <p class="muted small">Staff confirm each shift. Changed: a shift was edited after they confirmed it, so they need to confirm again.</p>
     {% else %}
       <p class="empty">No hours or shifts this week.</p>
     {% endif %}
