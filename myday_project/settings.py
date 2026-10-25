@@ -146,6 +146,8 @@ LOCATION_CHECK_DEFAULT = env_bool("MYDAY_LOCATION_CHECK", False)
 # Log on / Log off into the Vensoft time log, likewise on its own.
 CLOCK_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_CLOCK_WRITES", False)
 LEAVE_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_LEAVE_WRITES", False)
+# Mechanic Fixed also logs a finished Tech Job in Vensoft (tech_techentry), as Lane Marshal does.
+TECH_JOB_WRITES_ENABLED = WRITES_ENABLED or env_bool("MYDAY_TECH_JOBS", False)
 # Lane calls (Lane Marshal's trouble calls): the Mechanic and Lane Marshal screens, for staff
 # switched on with manage.py mechanic / manage.py marshal.
 MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)

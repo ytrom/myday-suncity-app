@@ -99,6 +99,28 @@ def resolution_for(menu, issue_id, option=""):
     return None if issue["options"] else issue["name"]
 
 
+def _plain(name):
+    return "".join(ch for ch in (name or "").lower() if ch.isalnum())
+
+
+def tech_job(call, resolution, user_id, bowl_id):
+    """Log the fix as a finished Tech Job in Vensoft (bowlcontrol.tech_techentry), the same way
+    Lane Marshal's Fixed does: title is the marshal's call, description is
+    "call · note · what was fixed", and the fault is the Vensoft issue option matching the call."""
+    fixed = "No fault found" if resolution == NO_FAULT else resolution
+    description = " · ".join(x for x in [call.issue, call.note, fixed] if x)
+    lane = int(call.lane) if str(call.lane).isdigit() else 0
+    with connections["bowlcontrol"].cursor() as c:
+        c.execute("SELECT id, name FROM tech_issueoption WHERE bowl_id = %s", [bowl_id])
+        option_id = next((r[0] for r in c.fetchall() if _plain(r[1]) == _plain(call.issue)), None)
+        c.execute(
+            "INSERT INTO tech_techentry (type, title, description, lane_number, submitted_via, created_at, "
+            "updated_at, dealt_with, dealt_via, dealt_at, bowl_id, created_by_id, dealt_by_id, updated_by_id, "
+            "issue_option_id) VALUES ('ISSUE', %s, %s, %s, 'LANE_MR', NOW(), NOW(), true, 'LANE_MR', NOW(), "
+            "%s, %s, %s, %s, %s)",
+            [call.issue[:200], description, lane, bowl_id, user_id, user_id, user_id, option_id])
+
+
 def get_call(call_id):
     return next((c for c in open_calls() if c.id == call_id), None)
 

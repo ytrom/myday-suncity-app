@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 ## Versions
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
+- **1.5.01** (25 Oct 2026): Mechanic Fixed can also log a finished Tech Job in Vensoft (bowlcontrol.tech_techentry) like Lane Marshal: title = the call, description "call · note · fix", issue option matched by name, credited to the tech. Off until MYDAY_TECH_JOBS=1 in .env; needs GRANT SELECT ON tech_issueoption, GRANT INSERT ON tech_techentry and USAGE on its id sequence.
 
 - **1.5.00** (25 Oct 2026): Mechanic Fixed asks what was actually fixed, using Lane Marshal's own fix list and its second-level menus (issue, issue_options), saved to resolution as "Issue — Detail", "Issue" or no_fault. Re-spot pins now go in NOTE as "Pins: 3, 5" like Lane Marshal. Needs GRANT SELECT ON issue, issue_options and GRANT UPDATE (resolution) ON tech_control_troublecall.
 - **1.4.00** (25 Oct 2026): once logged on, the shift card goes away and a Finish shift pill sits by the greeting (opens the Log off PIN pad).

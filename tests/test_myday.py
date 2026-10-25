@@ -635,6 +635,17 @@ class MechanicTests(Base):
             fix.assert_called_with(7, "Sam", "Pin in Table")
             self.client.post("/mechanic/7/fixed", {"no_fault": "1"})
             fix.assert_called_with(7, "Sam", "no_fault")
+            # Tech Jobs stay off unless MYDAY_TECH_JOBS is on
+            with mock.patch("core.lanes.tech_job") as job:
+                self.client.post("/mechanic/7/fixed", {"no_fault": "1"})
+                job.assert_not_called()
+                with self.settings(TECH_JOB_WRITES_ENABLED=True):
+                    self.client.post("/mechanic/7/fixed", {"issue": "7"})
+                job.assert_called_once()
+                self.assertEqual(job.call_args.args[1], "Pin in Table")
+                with self.settings(TECH_JOB_WRITES_ENABLED=True):
+                    job.side_effect = OSError  # a failed Tech Job doesn't undo the fix
+                    self.assertEqual(self.client.post("/mechanic/7/fixed", {"issue": "7"}).status_code, 302)
             # already fixed elsewhere: back to the list
             self.assertRedirects(self.client.get("/mechanic/99/fixed"), "/mechanic", fetch_redirect_response=False)
 

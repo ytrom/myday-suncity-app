@@ -421,10 +421,16 @@ def mechanic_fix(request, call_id):
         else:
             try:
                 lanes.fix(call_id, request.staff.first_name, resolution)
-                return redirect("mechanic")
             except Exception:
                 log.exception("Lane calls database error")
                 error = "That didn't save. Try again."
+            else:
+                if settings.TECH_JOB_WRITES_ENABLED and request.membership:
+                    try:
+                        lanes.tech_job(call, resolution, request.staff.id, request.membership.bowl_id)
+                    except Exception:
+                        log.exception("Tech Job write failed")  # the call is fixed; the job is extra
+                return redirect("mechanic")
     picked = next((i for i in menu if str(i["id"]) == request.GET.get("issue", "")), None)
     return _page(request, "core/mechanic_fix.html", "mechanic", call=call, menu=menu, picked=picked, error=error)
 
