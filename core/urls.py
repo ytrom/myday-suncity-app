@@ -24,6 +24,7 @@ urlpatterns = [
     path("messages/<int:note_id>/ack", views.message_ack, name="message_ack"),
     path("mechanic", views.mechanic, name="mechanic"),
     path("mechanic/calls", views.mechanic_calls, name="mechanic_calls"),
+    path("mechanic/<int:call_id>/fixed", views.mechanic_fix, name="mechanic_fix"),
     path("mechanic/<int:call_id>/<str:action>", views.mechanic_action, name="mechanic_action"),
     path("marshal", views.marshal, name="marshal"),
     path("marshal/grid", views.marshal_grid, name="marshal_grid"),

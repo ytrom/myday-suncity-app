@@ -86,7 +86,8 @@ The lane calls live in Lane Marshal's database (`Suncity_Database`, table `tech_
 GRANT CONNECT ON DATABASE "Suncity_Database" TO myday_app;
 \c Suncity_Database
 GRANT USAGE ON SCHEMA public TO myday_app;
-GRANT SELECT, UPDATE (attended_at, fixed_at, fixed_by) ON tech_control_troublecall TO myday_app;
+GRANT SELECT, UPDATE (attended_at, fixed_at, fixed_by, resolution) ON tech_control_troublecall TO myday_app;
+GRANT SELECT ON issue, issue_options TO myday_app;
 -- Lane Marshal screen (reporting a lane) also needs:
 GRANT INSERT ON tech_control_troublecall TO myday_app;
 DO $$ BEGIN EXECUTE format('GRANT USAGE ON SEQUENCE %s TO myday_app', pg_get_serial_sequence('tech_control_troublecall', 'id')); END $$;
@@ -118,6 +119,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.5.00** (25 Oct 2026): Mechanic Fixed asks what was actually fixed, using Lane Marshal's own fix list and its second-level menus (issue, issue_options), saved to resolution as "Issue — Detail", "Issue" or no_fault. Re-spot pins now go in NOTE as "Pins: 3, 5" like Lane Marshal. Needs GRANT SELECT ON issue, issue_options and GRANT UPDATE (resolution) ON tech_control_troublecall.
 - **1.4.00** (25 Oct 2026): once logged on, the shift card goes away and a Finish shift pill sits by the greeting (opens the Log off PIN pad).
 - **1.3.02** (25 Oct 2026): rostered shifts can be confirmed any time, past weeks included (never un-confirmed).
 - **1.3.01** (25 Oct 2026): confirm each shift's hours (works while still logged on for today), plus Confirm all; Payroll shows "2 of 3" for part-confirmed weeks.

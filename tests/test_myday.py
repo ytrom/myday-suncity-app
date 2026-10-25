@@ -609,10 +609,34 @@ class MechanicTests(Base):
         with mock.patch("core.lanes.attend") as attend:
             self.assertEqual(self.client.post("/mechanic/7/attend").status_code, 200)
         attend.assert_called_once_with(7)
-        with mock.patch("core.lanes.fix") as fix:
-            self.client.post("/mechanic/7/fix")
-        fix.assert_called_once_with(7, "Sam")
+        self.assertEqual(self.client.post("/mechanic/7/fix").status_code, 400)  # Fixed asks what was fixed
         self.assertEqual(self.client.post("/mechanic/7/delete").status_code, 400)
+
+    MENU = [{"id": 7, "name": "Pin in Table", "options": []},
+            {"id": 10, "name": "Respot", "options": ["Wire Off Cell", "Turret"]}]
+
+    def test_fixed_asks_what_was_fixed(self):
+        self.make_mechanic()
+        self.assertContains(self.client.get("/mechanic"), "/mechanic/7/fixed")
+        with mock.patch("core.lanes.fix_menu", return_value=self.MENU), mock.patch("core.lanes.fix") as fix:
+            page = self.client.get("/mechanic/7/fixed")
+            self.assertContains(page, "What was fixed?")
+            self.assertContains(page, "Called as: Ball return")  # the marshal's symptom
+            self.assertContains(page, "?issue=10")  # Respot has details
+            self.assertContains(page, "No fault found")
+            self.assertContains(self.client.get("/mechanic/7/fixed?issue=10"), 'value="Wire Off Cell"')
+            self.assertContains(self.client.post("/mechanic/7/fixed", {"issue": "10"}), "Pick what was fixed")
+            self.assertContains(self.client.post("/mechanic/7/fixed", {"issue": "10", "option": "Nope"}), "Pick what was fixed")
+            fix.assert_not_called()
+            self.assertRedirects(self.client.post("/mechanic/7/fixed?issue=10", {"issue": "10", "option": "Wire Off Cell"}),
+                                 "/mechanic", fetch_redirect_response=False)
+            fix.assert_called_with(7, "Sam", "Respot — Wire Off Cell")
+            self.client.post("/mechanic/7/fixed", {"issue": "7"})
+            fix.assert_called_with(7, "Sam", "Pin in Table")
+            self.client.post("/mechanic/7/fixed", {"no_fault": "1"})
+            fix.assert_called_with(7, "Sam", "no_fault")
+            # already fixed elsewhere: back to the list
+            self.assertRedirects(self.client.get("/mechanic/99/fixed"), "/mechanic", fetch_redirect_response=False)
 
     def test_all_clear_and_unreachable(self):
         self.make_mechanic()
@@ -690,7 +714,7 @@ class MarshalTests(Base):
             self.assertContains(self.client.post("/marshal/4?fault=Re-spot", {"issue": "Re-spot"}), "Tap the pins first")
             report.assert_not_called()
             self.client.post("/marshal/4?fault=Re-spot", {"issue": "Re-spot", "pins": ["5", "3", "11"], "note": "front row"})
-        report.assert_called_once_with(4, "Re-spot", "Pins 3, 5", "front row")
+        report.assert_called_once_with(4, "Re-spot", "", "Pins: 3, 5 · front row")
 
     def test_switch_command(self):
         from io import StringIO

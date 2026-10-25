@@ -21,7 +21,7 @@
                 {% if not attended %}
                   <button class="btn btn-ghost btn-small" hx-post="{% url 'mechanic_action' c.id 'attend' %}" hx-target="#lane-calls" hx-swap="outerHTML">On my way</button>
                 {% endif %}
-                <button class="btn btn-primary btn-small" hx-post="{% url 'mechanic_action' c.id 'fix' %}" hx-target="#lane-calls" hx-swap="outerHTML">Fixed</button>
+                <a class="btn btn-primary btn-small" href="{% url 'mechanic_fix' c.id %}">Fixed</a>
               </div>
             </div>
           {% endfor %}

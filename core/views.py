@@ -391,14 +391,42 @@ def mechanic_action(request, call_id, action):
     try:
         if action == "attend":
             lanes.attend(call_id)
-        elif action == "fix":
-            lanes.fix(call_id, request.staff.first_name)
         else:
             return HttpResponseBadRequest()
     except Exception:
         log.exception("Lane calls database error")
         error = "That didn't save. Try again."
     return render(request, "core/partials/mechanic_calls.html", _calls(request, error))
+
+
+def mechanic_fix(request, call_id):
+    """Fixed: what was fixed? Lane Marshal's issue list, then that issue's details (?issue=ID),
+    or No fault. Saved in resolution like Lane Marshal's own Fixed menu."""
+    _mechanic_only(request)
+    error = None
+    try:
+        call, menu = lanes.get_call(call_id), lanes.fix_menu()
+    except Exception:
+        log.exception("Lane calls database error")
+        call, menu, error = None, [], "Can't reach the lane calls right now. Try again."
+    if not call and not error:
+        return redirect("mechanic")  # already fixed (maybe from the tablet)
+    if request.method == "POST" and call:
+        if request.POST.get("no_fault"):
+            resolution = lanes.NO_FAULT
+        else:
+            resolution = lanes.resolution_for(menu, request.POST.get("issue"), request.POST.get("option", ""))
+        if not resolution:
+            error = "Pick what was fixed."
+        else:
+            try:
+                lanes.fix(call_id, request.staff.first_name, resolution)
+                return redirect("mechanic")
+            except Exception:
+                log.exception("Lane calls database error")
+                error = "That didn't save. Try again."
+    picked = next((i for i in menu if str(i["id"]) == request.GET.get("issue", "")), None)
+    return _page(request, "core/mechanic_fix.html", "mechanic", call=call, menu=menu, picked=picked, error=error)
 
 
 def _lane_grid(error=None):
@@ -438,14 +466,15 @@ def marshal_lane(request, lane):
     pin_step = fault in settings.MARSHAL_PIN_CALLS
     if request.method == "POST":
         issue = request.POST.get("issue", "")
-        option = lanes.pins_option(request.POST.getlist("pins")) if pin_step else ""
+        pins = lanes.pins_note(request.POST.getlist("pins")) if pin_step else ""
         if issue not in settings.MARSHAL_CALLS:
             error = "Pick what's wrong first."
-        elif pin_step and not option:
+        elif pin_step and not pins:
             error = "Tap the pins first."
         else:
+            note = " · ".join(x for x in [pins, request.POST.get("note", "").strip()] if x)
             try:
-                lanes.report(lane, issue, option, request.POST.get("note", ""))
+                lanes.report(lane, issue, "", note)
                 return redirect(f"{reverse('marshal')}?sent={lane}")
             except Exception:
                 log.exception("Lane calls database error")

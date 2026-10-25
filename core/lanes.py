@@ -64,10 +64,43 @@ def attend(call_id):
                   "WHERE id = %s AND attended_at IS NULL AND fixed_at IS NULL", [call_id])
 
 
-def fix(call_id, who):
+NO_FAULT = "no_fault"
+
+
+def fix(call_id, who, resolution=""):
+    """Mark a call fixed with what was done, saved in resolution the way Lane Marshal's own
+    Fixed menu does: "Issue — Detail", "Issue", or "no_fault"."""
     with _cursor() as c:
-        c.execute("UPDATE tech_control_troublecall SET fixed_at = NOW(), fixed_by = %s "
-                  "WHERE id = %s AND fixed_at IS NULL", [(who or "MECH")[:FIXED_BY_MAX], call_id])
+        c.execute("UPDATE tech_control_troublecall SET fixed_at = NOW(), fixed_by = %s, resolution = %s "
+                  "WHERE id = %s AND fixed_at IS NULL", [(who or "MECH")[:FIXED_BY_MAX], resolution, call_id])
+
+
+def fix_menu():
+    """What-was-fixed choices: Lane Marshal's issue list with each issue's details, as
+    [{"id", "name", "options": [names]}] in the same order as its Fixed menu."""
+    with _cursor() as c:
+        c.execute('SELECT "Issue_ID", "Issue" FROM issue WHERE "Active" = true ORDER BY "Issue_ID"')
+        issues = [{"id": r[0], "name": (r[1] or "").strip(), "options": []} for r in c.fetchall()]
+        c.execute('SELECT detail_issue, "Detail" FROM issue_options WHERE "Active" = true ORDER BY id')
+        by_id = {i["id"]: i for i in issues}
+        for issue_id, detail in c.fetchall():
+            if issue_id in by_id and (detail or "").strip():
+                by_id[issue_id]["options"].append(detail.strip())
+    return issues
+
+
+def resolution_for(menu, issue_id, option=""):
+    """The resolution text for a choice, or None if it isn't on the menu."""
+    issue = next((i for i in menu if str(i["id"]) == str(issue_id)), None)
+    if not issue:
+        return None
+    if option:
+        return f"{issue['name']} — {option}" if option in issue["options"] else None
+    return None if issue["options"] else issue["name"]
+
+
+def get_call(call_id):
+    return next((c for c in open_calls() if c.id == call_id), None)
 
 
 NOTE_MAX = 200
@@ -84,10 +117,10 @@ def report(lane, issue, option="", note=""):
 PIN_ROWS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]]  # the pin deck as the marshal sees it
 
 
-def pins_option(values):
-    """The pins picked on the pin screen, as stored in OPTION, e.g. "Pins 3, 5"."""
+def pins_note(values):
+    """The pins picked on the pin screen, as Lane Marshal stores them in NOTE, e.g. "Pins: 3, 5"."""
     pins = sorted({int(v) for v in values if str(v).isdigit() and 1 <= int(v) <= 10})
-    return ("Pins " + ", ".join(map(str, pins))) if pins else ""
+    return ("Pins: " + ", ".join(map(str, pins))) if pins else ""
 
 
 def by_lane(calls):
