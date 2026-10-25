@@ -81,7 +81,9 @@ def tasks(request):
 
 @require_GET
 def roster(request):
-    return _page(request, "core/roster.html", "roster", rows=_roster_rows(request))
+    worked, total = services.hours_worked(request.staff)
+    return _page(request, "core/roster.html", "roster", rows=_roster_rows(request), worked=worked,
+                 worked_total=f"{total // 60}h {total % 60:02d}m")
 
 
 def rdo(request):

@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.2.00** (25 Oct 2026): My Roster shows Hours worked for the last 2 weeks from the time log, including days you weren't rostered (marked Extra).
 - **1.1.00** (24 Oct 2026): techs get Mechanic and Lane Marshal automatically from their Vensoft role (MYDAY_TECH_ROLES, default TECH); manage.py mechanic/marshal still adds others.
 - **1.0.09** (24 Oct 2026): Test mode bar removed from the top (it only shows for the LAN test sign-in now).
 - **1.0.08** (24 Oct 2026): optional note for the mechanic on Lane Marshal (saved in NOTE, like the tablet).

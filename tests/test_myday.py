@@ -276,6 +276,17 @@ class TabTests(Base):
         self.assertContains(resp, "Coming soon")
         self.assertNotContains(resp, "Print league sheets")
 
+    def test_roster_shows_hours_worked_including_unrostered_days(self):
+        day = timezone.localdate() - timedelta(days=3)
+        start = timezone.make_aware(timezone.datetime.combine(day, time(10)))
+        TimeEntry.objects.create(user=self.sam, bowl_id=1, clock_in=start, clock_out=start + timedelta(hours=4, minutes=8),
+                                 source="kiosk", note="", payable_minutes=240, payable_source="AUTO",
+                                 created_at=start, is_locked=False)
+        resp = self.client.get("/roster")
+        self.assertContains(resp, "Hours worked")
+        self.assertContains(resp, "4h 00m · not rostered")
+        self.assertContains(resp, "10:00 a.m. – 2:08 p.m.")
+
     def test_shift_tasks_page_shows_my_tasks(self):
         resp = self.client.get("/tasks")
         self.assertContains(resp, "Print league sheets")

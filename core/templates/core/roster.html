@@ -14,4 +14,30 @@
       <p class="empty">No shifts rostered in the next 2 weeks.</p>
     {% endif %}
   </section>
+
+  <section class="section" aria-labelledby="hours-title">
+    <div class="section-head">
+      <h2 id="hours-title">Hours worked</h2>
+      <span class="muted small">Last 2 weeks{% if worked %} · {{ worked_total }}{% endif %}</span>
+    </div>
+    {% if worked %}
+      <ul class="stack">
+        {% for w in worked %}
+          <li class="card roster-row">
+            <div class="datebox">
+              <span class="dow">{{ w.day|date:"D"|upper }}</span>
+              <span class="day">{{ w.day|date:"j" }}</span>
+            </div>
+            <div class="grow">
+              <p class="roster-time">{{ w.clock_in|time:"g:i a" }} – {% if w.clock_out %}{{ w.clock_out|time:"g:i a" }}{% else %}now{% endif %}</p>
+              <p class="muted small">{{ w.hours }}{% if not w.rostered %} · not rostered{% endif %}</p>
+            </div>
+            {% if not w.clock_out %}<span class="chip chip-good">On now</span>{% elif not w.rostered %}<span class="chip chip-warn">Extra</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No hours logged in the last 2 weeks.</p>
+    {% endif %}
+  </section>
 {% endblock %}

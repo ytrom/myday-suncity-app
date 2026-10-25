@@ -247,6 +247,29 @@ def upcoming_roster(user, days=14):
     return list(assignments(user, today(), days))
 
 
+def hours_worked(user, days=14):
+    """My Log on / Log off entries from the login clock (and MyDay) for the last `days` days,
+    newest first, each marked whether I was rostered that day. Returns (rows, total_minutes)."""
+    start = today() - timedelta(days=days - 1)
+    entries = TimeEntry.objects.filter(user_id=user.id, clock_in__date__gte=start).order_by("-clock_in")
+    rostered = set(
+        ShiftAssignment.objects.filter(user_id=user.id, shift__date__gte=start, shift__date__lte=today())
+        .values_list("shift__date", flat=True)
+    )
+    now = timezone.now()
+    rows, total = [], 0
+    for e in entries:
+        day = timezone.localtime(e.clock_in).date()
+        if e.clock_out:
+            minutes = e.payable_minutes if e.payable_minutes is not None else payable_minutes(e.clock_in, e.clock_out)
+        else:
+            minutes = int((now - e.clock_in).total_seconds() // 60)
+        total += minutes
+        rows.append({"day": day, "clock_in": e.clock_in, "clock_out": e.clock_out, "minutes": minutes,
+                     "hours": f"{minutes // 60}h {minutes % 60:02d}m", "rostered": day in rostered})
+    return rows, total
+
+
 def confirm_shift(user, assignment_id, session):
     a = ShiftAssignment.objects.filter(id=assignment_id, user_id=user.id).first()
     if not a:
