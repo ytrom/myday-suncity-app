@@ -72,7 +72,10 @@ def home(request):
 
 @require_GET
 def myday(request):
-    return _page(request, "core/myday.html", "myday", **_shift_ctx(request))
+    ctx = _shift_ctx(request)
+    if request.GET.get("finish") and ctx["is_on"]:  # the Finish shift pill: open the Log off PIN pad
+        ctx.update(finishing=True, **services.pin_lengths())
+    return _page(request, "core/myday.html", "myday", **ctx)
 
 
 @require_GET
@@ -229,6 +232,13 @@ def _shift_card(request, **extra):
     return render(request, "core/partials/shift_card.html", ctx)
 
 
+def _clocked(request):
+    """After Log on / Log off: reload MyDay, so the Finish shift pill appears or the Log on card comes back."""
+    resp = _shift_card(request)
+    resp["HX-Redirect"] = reverse("myday")
+    return resp
+
+
 @require_GET
 def clock_start(request, action):
     if action not in ACTIONS:
@@ -267,11 +277,11 @@ def clock_submit(request, action):
 
     if not services.location_check_on(request.staff):
         services.clock(request.staff, request.membership, action, on_site=None)
-        return _shift_card(request)
+        return _clocked(request)
     on_site = services.is_on_site(request, request.POST.get("lat"), request.POST.get("lng"))
     if on_site:
         services.clock(request.staff, request.membership, action, on_site=True)
-        return _shift_card(request)
+        return _clocked(request)
 
     request.session["pending_clock"] = {"action": action, "at": timezone.now().timestamp()}
     return render(request, "core/partials/offsite.html", {"action": action, "label": ACTIONS[action]})
@@ -290,7 +300,7 @@ def clock_offsite(request, action):
             "action": action, "label": ACTIONS[action], "error": "Tell us where you're working.",
         })
     services.clock(request.staff, request.membership, action, on_site=False, reason=reason)
-    return _shift_card(request)
+    return _clocked(request)
 
 
 @require_GET

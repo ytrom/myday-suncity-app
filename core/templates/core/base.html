@@ -41,7 +41,15 @@
       </div>
       {% else %}
       <p class="hero-date">{{ today|date:"l j F" }}</p>
-      <h1 class="hero-name">{{ greeting }}, {{ staff.first_name }}</h1>
+      <div class="hero-greet">
+        <h1 class="hero-name">{{ greeting }}, {{ staff.first_name }}</h1>
+        {% if counts.clocked_on %}
+          <a href="{% url 'myday' %}?finish=1" class="finish-pill" title="On since {{ counts.on_since|time:'g:i a' }}">
+            <span class="dot" aria-hidden="true"></span>Finish shift
+          </a>
+        {% endif %}
+      </div>
+      {% if counts.clocked_on %}<p class="hero-onsince">On since {{ counts.on_since|time:"g:i a" }}{% if counts.on_site is False %} · off site{% endif %}</p>{% endif %}
       {% include "core/partials/tabs.html" %}
       {% endif %}
     </header>

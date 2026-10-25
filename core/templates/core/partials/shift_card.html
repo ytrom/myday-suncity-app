@@ -1,3 +1,9 @@
+{% if is_on and not finishing %}
+<section id="shift-card" class="card shift shift-collapsed" aria-label="Finish shift">
+  {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+  <div id="shift-actions"></div>
+</section>
+{% else %}
 <section id="shift-card" class="card shift" aria-label="Today's shift">
   <div class="shift-head">
     <div>
@@ -18,7 +24,9 @@
   {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
 
   <div id="shift-actions">
-    {% if is_on %}
+    {% if is_on and finishing %}
+      {% include "core/partials/pin_sheet.html" with action="off" label="Log off" %}
+    {% elif is_on %}
       <p class="status"><span class="dot" aria-hidden="true"></span> On shift since {{ since|time:"g:i a" }}</p>
       <button class="btn btn-outline" hx-get="{% url 'clock_start' 'off' %}" hx-target="#shift-actions" hx-swap="innerHTML">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
@@ -37,3 +45,4 @@
     <p class="practice" role="note"><strong>Practice only:</strong> Log on / Log off here doesn't go into Vensoft yet. Please use the login clock for your hours.</p>
   {% endif %}
 </section>
+{% endif %}

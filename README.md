@@ -118,6 +118,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
 
+- **1.4.00** (25 Oct 2026): once logged on, the shift card goes away and a Finish shift pill sits by the greeting (opens the Log off PIN pad).
 - **1.3.02** (25 Oct 2026): rostered shifts can be confirmed any time, past weeks included (never un-confirmed).
 - **1.3.01** (25 Oct 2026): confirm each shift's hours (works while still logged on for today), plus Confirm all; Payroll shows "2 of 3" for part-confirmed weeks.
 - **1.3.00** (25 Oct 2026): staff confirm their hours each pay week (or flag what's wrong); managers get a Payroll screen showing who has confirmed. Stored in MyDay, not Vensoft.

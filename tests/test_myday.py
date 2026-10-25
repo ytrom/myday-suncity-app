@@ -169,16 +169,19 @@ class ClockTests(Base):
 
     def test_on_site_log_on_in_test_mode_saves_nothing_to_vensoft(self):
         resp = self.client.post("/clock/on", {"pin": "1234", **VENUE})
-        self.assertContains(resp, "On site")
-        self.assertContains(resp, "Log off")
+        self.assertEqual(resp["HX-Redirect"], "/myday")
+        page = self.client.get("/myday")
+        self.assertContains(page, "Finish shift")
+        self.assertContains(page, "On since")
+        self.assertNotContains(page, ">\n        Log on")
         self.assertEqual(TimeEntry.objects.count(), 0)
         check = SiteCheck.objects.get()
         self.assertTrue(check.on_site)
         self.assertEqual(check.reason, "")
 
     def test_venue_wifi_counts_as_on_site_without_location(self):
-        resp = self.client.post("/clock/on", {"pin": "1234"}, HTTP_CF_CONNECTING_IP="203.0.113.10")
-        self.assertContains(resp, "On site")
+        self.client.post("/clock/on", {"pin": "1234"}, HTTP_CF_CONNECTING_IP="203.0.113.10")
+        self.assertTrue(SiteCheck.objects.get().on_site)
 
     def test_blocked_location_counts_as_off_site(self):
         resp = self.client.post("/clock/on", {"pin": "1234"})
@@ -190,7 +193,8 @@ class ClockTests(Base):
         self.assertFalse(SiteCheck.objects.exists())
 
         resp = self.client.post("/clock/on/offsite", {"reason": "Picking up stock"})
-        self.assertContains(resp, "Off site")
+        self.assertEqual(resp["HX-Redirect"], "/myday")
+        self.assertContains(self.client.get("/myday"), "off site")
         check = SiteCheck.objects.get()
         self.assertFalse(check.on_site)
         self.assertEqual(check.reason, "Picking up stock")
@@ -224,7 +228,8 @@ class ClockTests(Base):
         start = timezone.now() - timedelta(hours=2, minutes=6)
         entry = TimeEntry.objects.create(user=self.sam, bowl_id=1, clock_in=start, source="kiosk", note="",
                                          payable_source="AUTO", created_at=start, is_locked=False)
-        self.assertContains(self.client.get("/myday"), "Log off")
+        self.assertContains(self.client.get("/myday"), "Finish shift")
+        self.assertContains(self.client.get("/myday?finish=1"), "Enter your PIN to log off")
         self.client.post("/clock/off", {"pin": "1234", **VENUE})
         entry.refresh_from_db()
         self.assertEqual(entry.payable_minutes, 120)
@@ -538,7 +543,7 @@ class LocationCheckOffTests(Base):
         sheet = self.client.get("/clock/on/start")
         self.assertNotContains(sheet, "data-locate")
         resp = self.client.post("/clock/on", {"pin": "1234", **FAR_AWAY})
-        self.assertContains(resp, "Log off")
+        self.assertEqual(resp["HX-Redirect"], "/myday")
         self.assertNotContains(resp, "not at Sun City")
         self.assertNotContains(resp, "Off site")
         self.assertIsNone(SiteCheck.objects.get().on_site)

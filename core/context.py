@@ -20,8 +20,20 @@ class TabCounts:
         return sum(1 for t in services.tasks_for(self.user, self.request.session) if not t.done)
 
     @cached_property
+    def clock(self):
+        return services.clock_status(self.user)
+
+    @property
     def clocked_on(self):
-        return services.clock_status(self.user)[0]
+        return self.clock[0]
+
+    @property
+    def on_since(self):
+        return self.clock[1]
+
+    @property
+    def on_site(self):
+        return self.clock[2]
 
     @cached_property
     def shifts_to_confirm(self):
