@@ -427,7 +427,9 @@ def mechanic_fix(request, call_id):
             else:
                 if settings.TECH_JOB_WRITES_ENABLED and request.membership:
                     try:
-                        lanes.tech_job(call, resolution, request.staff.id, request.membership.bowl_id)
+                        fixed_issue = None if resolution == lanes.NO_FAULT else request.POST.get("issue")
+                        lanes.tech_job(call, resolution, request.staff.id, request.membership.bowl_id,
+                                       fixed_issue, request.POST.get("option", ""))
                     except Exception:
                         log.exception("Tech Job write failed")  # the call is fixed; the job is extra
                 return redirect("mechanic")

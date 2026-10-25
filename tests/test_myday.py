@@ -642,7 +642,7 @@ class MechanicTests(Base):
                 with self.settings(TECH_JOB_WRITES_ENABLED=True):
                     self.client.post("/mechanic/7/fixed", {"issue": "7"})
                 job.assert_called_once()
-                self.assertEqual(job.call_args.args[1], "Pin in Table")
+                self.assertEqual(job.call_args.args[1:], ("Pin in Table", 1, job.call_args.args[3], "7", ""))
                 with self.settings(TECH_JOB_WRITES_ENABLED=True):
                     job.side_effect = OSError  # a failed Tech Job doesn't undo the fix
                     self.assertEqual(self.client.post("/mechanic/7/fixed", {"issue": "7"}).status_code, 302)
