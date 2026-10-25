@@ -1,24 +1,32 @@
 {% extends "core/base.html" %}
 {% block title %}My Roster{% endblock %}
 {% block main %}
+  <nav class="weeknav" aria-label="Pay week" hx-boost="true">
+    <a href="{% url 'roster' %}?week={{ prev_week }}" class="weeknav-arrow" aria-label="Previous week">&lsaquo;</a>
+    <div class="weeknav-label">
+      <strong>{{ week_start|date:"D j M" }} – {{ week_end|date:"D j M" }}</strong>
+      <span class="muted small">{% if offset == 0 %}This pay week{% elif offset == -1 %}Last pay week{% elif offset == 1 %}Next pay week{% else %}Pay week{% endif %}{% if offset != 0 %} · <a href="{% url 'roster' %}">back to this week</a>{% endif %}</span>
+    </div>
+    <a href="{% url 'roster' %}?week={{ next_week }}" class="weeknav-arrow" aria-label="Next week">&rsaquo;</a>
+  </nav>
+
   <section class="section" aria-labelledby="roster-title">
     <div class="section-head">
-      <h2 id="roster-title">Upcoming shifts</h2>
-      <span class="muted small">Next 2 weeks</span>
+      <h2 id="roster-title">Shifts</h2>
     </div>
     {% if rows %}
       <ul class="stack">
         {% for a in rows %}{% include "core/partials/roster_item.html" %}{% endfor %}
       </ul>
     {% else %}
-      <p class="empty">No shifts rostered in the next 2 weeks.</p>
+      <p class="empty">No shifts rostered this week.</p>
     {% endif %}
   </section>
 
   <section class="section" aria-labelledby="hours-title">
     <div class="section-head">
       <h2 id="hours-title">Hours worked</h2>
-      <span class="muted small">Last 2 weeks{% if worked %} · {{ worked_total }}{% endif %}</span>
+      {% if worked %}<span class="muted small">Total {{ worked_total }}</span>{% endif %}
     </div>
     {% if worked %}
       <ul class="stack">
@@ -37,7 +45,7 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p class="empty">No hours logged in the last 2 weeks.</p>
+      <p class="empty">No hours logged this week.</p>
     {% endif %}
   </section>
 {% endblock %}

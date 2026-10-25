@@ -261,3 +261,7 @@ a.fault { text-decoration: none; color: inherit; }
 .lane-head > :first-child { justify-self: start; }
 .lane-note { width: 100%; margin-top: 10px; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: #fff; font: inherit; font-size: 16px; }
 .lane-note + .btn-big { margin-top: 10px; }
+.weeknav { margin-top: 16px; display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; box-shadow: var(--shadow); padding: 6px; }
+.weeknav-arrow { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; line-height: 1; text-decoration: none; color: var(--navy); background: var(--tint); flex-shrink: 0; }
+.weeknav-label { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.weeknav-label strong { color: var(--navy); font-size: 15px; }

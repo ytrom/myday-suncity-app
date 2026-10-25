@@ -282,10 +282,21 @@ class TabTests(Base):
         TimeEntry.objects.create(user=self.sam, bowl_id=1, clock_in=start, clock_out=start + timedelta(hours=4, minutes=8),
                                  source="kiosk", note="", payable_minutes=240, payable_source="AUTO",
                                  created_at=start, is_locked=False)
-        resp = self.client.get("/roster")
+        from core.services import pay_week
+        offset = 0 if day >= pay_week(0)[0] else -1
+        resp = self.client.get(f"/roster?week={offset}")
         self.assertContains(resp, "Hours worked")
         self.assertContains(resp, "4h 00m · not rostered")
         self.assertContains(resp, "10:00 a.m. – 2:08 p.m.")
+
+    def test_pay_week_runs_friday_to_thursday(self):
+        from core.services import pay_week
+        first, last = pay_week(0)
+        self.assertEqual((first.weekday(), last.weekday()), (4, 3))
+        self.assertTrue(first <= timezone.localdate() <= last)
+        self.assertEqual(pay_week(1)[0], first + timedelta(days=7))
+        self.assertContains(self.client.get("/roster?week=-1"), "Last pay week")
+        self.assertContains(self.client.get("/roster?week=junk"), "This pay week")
 
     def test_shift_tasks_page_shows_my_tasks(self):
         resp = self.client.get("/tasks")

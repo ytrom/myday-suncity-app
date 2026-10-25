@@ -12,6 +12,7 @@ from django.templatetags.static import static
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from bc.models import ShiftAssignment
 from myday_project.version import VERSION
 
 from . import lanes, services
@@ -81,9 +82,16 @@ def tasks(request):
 
 @require_GET
 def roster(request):
-    worked, total = services.hours_worked(request.staff)
-    return _page(request, "core/roster.html", "roster", rows=_roster_rows(request), worked=worked,
-                 worked_total=f"{total // 60}h {total % 60:02d}m")
+    """One pay week (Friday to Thursday): my shifts and the hours I logged. ?week=-1 is last week."""
+    try:
+        offset = max(-52, min(52, int(request.GET.get("week", "0"))))
+    except ValueError:
+        offset = 0
+    start, end = services.pay_week(offset)
+    worked, total = services.hours_worked(request.staff, start, end)
+    return _page(request, "core/roster.html", "roster", rows=_roster_rows(request, start, end), worked=worked,
+                 worked_total=f"{total // 60}h {total % 60:02d}m", week_start=start, week_end=end,
+                 offset=offset, prev_week=offset - 1, next_week=offset + 1)
 
 
 def rdo(request):
@@ -260,6 +268,9 @@ def shift_confirm(request, assignment_id):
     if not services.confirm_shift(request.staff, assignment_id, request.session):
         return HttpResponse(status=404)
     row = next((r for r in _roster_rows(request) if r.id == assignment_id), None)
+    if row is None:  # confirmed from a later pay week
+        row = ShiftAssignment.objects.select_related("shift").get(id=assignment_id)
+        row.confirmed = True
     resp = render(request, "core/partials/roster_item.html", {"a": row})
     resp["HX-Trigger"] = "counts-changed"
     return resp
@@ -399,9 +410,12 @@ def tabs(request):
     return render(request, "core/partials/tabs.html", {"tab": request.GET.get("tab", "myday")})
 
 
-def _roster_rows(request):
+def _roster_rows(request, start=None, end=None):
     overlay = request.session.get("test_overlay", {}).get("confirmed", [])
-    rows = services.upcoming_roster(request.staff)
+    if start:
+        rows = list(services.assignments(request.staff, start, (end - start).days + 1))
+    else:
+        rows = services.upcoming_roster(request.staff)
     for a in rows:
         a.confirmed = a.confirmed or a.id in overlay
     return rows
