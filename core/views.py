@@ -85,7 +85,9 @@ def tasks(request):
 
 @require_GET
 def work(request):
-    """Desktop-friendly Work page: today's schedule beside my tickable task list."""
+    """Desktop-friendly Work page: today's schedule beside my tickable task list. Only for MYDAY_WORK_EMAILS."""
+    if not services.has_work_page(request.staff):
+        raise Http404
     mine, others = services.work_lists(request.staff, request.session)
     return _page(request, "core/work.html", "work", schedule=services.todays_schedule(request.staff),
                  mine=mine, others=others, mine_to_do=sum(1 for t in mine if not t.done))

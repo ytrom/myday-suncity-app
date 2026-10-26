@@ -324,6 +324,10 @@ def send_query(user, week_start, rows, note):
     )
 
 
+def has_work_page(user):
+    return bool(user and (user.email or "").lower() in settings.WORK_EMAILS)
+
+
 def is_manager(user):
     if not user:
         return False

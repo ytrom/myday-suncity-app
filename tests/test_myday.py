@@ -246,6 +246,7 @@ class ClockTests(Base):
             self.assertEqual(payable_minutes(t, t + timedelta(minutes=mins)), want, mins)
 
 
+@override_settings(WORK_EMAILS=["sam@suncitytenpin.com.au"])
 class TabTests(Base):
     def setUp(self):
         super().setUp()
@@ -376,6 +377,11 @@ class TabTests(Base):
     def test_cannot_tick_someone_elses_task(self):
         hidden = TechTask.objects.get(title="Someone else's job")
         self.assertEqual(self.client.post(f"/tasks/{hidden.id}/toggle").status_code, 404)
+
+    def test_work_page_hidden_unless_switched_on(self):
+        with override_settings(WORK_EMAILS=[]):
+            self.assertEqual(self.client.get("/work").status_code, 404)
+            self.assertNotContains(self.client.get("/myday"), 'class="desknav"')
 
     def test_work_page_shows_schedule_and_my_tasks_high_first(self):
         now = timezone.now()
