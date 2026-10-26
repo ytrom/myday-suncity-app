@@ -120,6 +120,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 ## Versions
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
+- **1.7.00** (27 Oct 2026): **Breakdown** button on each mechanic call, same as Lane Marshal. The call stays open, pulses red here and on Lane Marshal's Mechanic and Control screens, and Fixed or No fault clears it. Stored as resolution = "breakdown" on the open call (no database change).
 - **1.6.01** (27 Oct 2026): the Work page and the MyDay | Work | Calendar header are only for the emails in MYDAY_WORK_EMAILS (Morty for now); everyone else sees MyDay as before.
 - **1.6.00** (27 Oct 2026): on a PC the header has **MyDay | Work | Calendar** and the page goes wide. **Work** (/work) shows today's schedule (everyone rostered today, you highlighted, "On now") beside your tickable tasks: yours first with High priority on top, then today's tasks for anyone. Calendar opens My Roster. Ticks use the same switch as Shift Tasks (test mode until MYDAY_WRITES_ENABLED=1).
 - **1.5.03** (26 Oct 2026): "No fault" button on each call next to Fixed (like Mission Control), for when the tech gets there and nothing is wrong.

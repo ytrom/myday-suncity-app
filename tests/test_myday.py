@@ -643,6 +643,19 @@ class MechanicTests(Base):
         self.assertEqual(self.client.post("/mechanic/7/fix").status_code, 400)  # Fixed asks what was fixed
         self.assertEqual(self.client.post("/mechanic/7/delete").status_code, 400)
 
+    def test_breakdown_flags_the_call(self):
+        self.make_mechanic()
+        self.assertContains(self.client.get("/mechanic"), "/mechanic/7/breakdown")
+        with mock.patch("core.lanes.breakdown") as breakdown:
+            self.assertEqual(self.client.post("/mechanic/7/breakdown").status_code, 200)
+            breakdown.assert_called_once_with(7, True)
+            self.client.post("/mechanic/7/unbreakdown")
+            breakdown.assert_called_with(7, False)
+        self.calls[0].breakdown = True
+        page = self.client.get("/mechanic").content.decode()
+        self.assertIn('class="call breakdown"', page)
+        self.assertIn("/mechanic/7/unbreakdown", page)
+
     MENU = [{"id": 7, "name": "Pin in Table", "options": []},
             {"id": 10, "name": "Respot", "options": ["Wire Off Cell", "Turret"]}]
 
