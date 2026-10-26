@@ -26,7 +26,13 @@ Membership.objects.create(user=sam, role="staff", pin_hash=make_password("1234")
 for title in ["Open lanes 1-12 and check pinsetters", "Print league sheets for Tuesday Mixed", "Restock shoe spray"]:
     t = TechTask.objects.create(title=title, status="OPEN", created_at=now)
     TechTaskAssignee.objects.create(techtask=t, user=sam)
+t = TechTask.objects.create(title="Fix lane 7 pinsetter before leagues", status="OPEN", priority="HIGH", created_at=now)
+TechTaskAssignee.objects.create(techtask=t, user=sam)
 TechTask.objects.create(title="Wipe down bar fridges", status="OPEN", created_at=now)
+for first, last, role, s, e in [("Toby", "Reid", "Mechanic", 8, 14), ("Alex", "Lee", "Bar", 12, 20), ("Jo", "Park", "Leagues", 17, 23)]:
+    u = User.objects.create(email=f"{first.lower()}@suncitytenpin.com.au", first_name=first, last_name=last, is_active=True, is_staff=True)
+    sh = Shift.objects.create(role=role, date=today, start_time=time(s), end_time=time(e))
+    ShiftAssignment.objects.create(shift=sh, user=u, confirmed=True)
 for days, role, s, e in [(0, "Front desk", 9, 15), (1, "Front desk", 16, 22), (3, "Bar", 17, 23), (6, "Leagues", 18, 22)]:
     sh = Shift.objects.create(role=role, date=today + timedelta(days=days), start_time=time(s), end_time=time(e))
     ShiftAssignment.objects.create(shift=sh, user=sam, confirmed=days < 2)

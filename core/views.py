@@ -83,6 +83,14 @@ def tasks(request):
     return _page(request, "core/tasks.html", "tasks", tasks=services.tasks_for(request.staff, request.session))
 
 
+@require_GET
+def work(request):
+    """Desktop-friendly Work page: today's schedule beside my tickable task list."""
+    mine, others = services.work_lists(request.staff, request.session)
+    return _page(request, "core/work.html", "work", schedule=services.todays_schedule(request.staff),
+                 mine=mine, others=others, mine_to_do=sum(1 for t in mine if not t.done))
+
+
 def _week_offset(request, default=0):
     try:
         return max(-52, min(52, int(request.GET.get("week", default))))
