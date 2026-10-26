@@ -377,6 +377,31 @@ class TabTests(Base):
         hidden = TechTask.objects.get(title="Someone else's job")
         self.assertEqual(self.client.post(f"/tasks/{hidden.id}/toggle").status_code, 404)
 
+    def test_work_page_shows_schedule_and_my_tasks_high_first(self):
+        now = timezone.now()
+        urgent = TechTask.objects.create(title="Fix lane 7 pinsetter", status="OPEN", priority="HIGH", created_at=now)
+        TechTaskAssignee.objects.create(techtask=urgent, user=self.sam)
+        TechTask.objects.create(title="Wipe bar fridges", status="OPEN", created_at=now)
+        alex = User.objects.get(email="x@y.z")
+        today_shift = Shift.objects.create(role="Bar", date=timezone.localdate(), start_time=time(0), end_time=time(23, 59))
+        ShiftAssignment.objects.create(shift=today_shift, user=alex, confirmed=True)
+        resp = self.client.get("/work")
+        self.assertContains(resp, "Today's schedule")
+        self.assertContains(resp, "Alex Lee")
+        self.assertContains(resp, 'class="desknav"')
+        body = resp.content.decode()
+        self.assertLess(body.index("Fix lane 7 pinsetter"), body.index("Print league sheets"))
+        self.assertLess(body.index("Print league sheets"), body.index("Everyone today"))
+        self.assertLess(body.index("Everyone today"), body.index("Wipe bar fridges"))
+        self.assertNotContains(resp, "Someone else's job")
+        self.assertContains(resp, "chip-urgent")
+
+    def test_tick_from_work_page(self):
+        self.assertContains(self.client.get("/work"), f"/tasks/{self.task.id}/toggle")
+        resp = self.client.post(f"/tasks/{self.task.id}/toggle")
+        self.assertContains(resp, 'aria-pressed="true"')
+        self.assertContains(self.client.get("/work"), "All done")
+
     def test_roster_and_confirm(self):
         resp = self.client.get("/roster")
         self.assertContains(resp, "9:00 a.m.")

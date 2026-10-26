@@ -9,6 +9,8 @@ Staff sign in once with their email and a code (Cloudflare Access), then open th
 - **RDO:** RDO and leave requests.
 - **Messages:** the same staff messages as the login clock, with a "Got it" button.
 
+On a PC the header also has **MyDay | Work | Calendar**. **Work** puts today's schedule next to your tickable task list (assigned to you first, High priority on top).
+
 Under the tabs is a second row of buttons: **Shift Tasks** for everyone, **Mechanic** and **Lane Marshal** for staff switched on for them, and room for more. Techs get a **Mechanic** button: the lane calls from the kiosks, the same list as Lane Marshal's /mechanic page, with On my way and Fixed. The phone beeps and buzzes when a new call comes in while that screen is open.
 
 Log on and Log off ask for the PIN and check the phone's location once. Anyone away from the venue is asked "working off-site today?" and gives a reason. MyDay stores only *on site* or *off site* and that reason. It never stores coordinates or distance.
@@ -118,6 +120,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 ## Versions
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
+- **1.6.00** (27 Oct 2026): on a PC the header has **MyDay | Work | Calendar** and the page goes wide. **Work** (/work) shows today's schedule (everyone rostered today, you highlighted, "On now") beside your tickable tasks: yours first with High priority on top, then today's tasks for anyone. Calendar opens My Roster. Ticks use the same switch as Shift Tasks (test mode until MYDAY_WRITES_ENABLED=1).
 - **1.5.03** (26 Oct 2026): "No fault" button on each call next to Fixed (like Mission Control), for when the tech gets there and nothing is wrong.
 - **1.5.02** (25 Oct 2026): Tech Jobs record what the mechanic fixed: issue option = the fix issue, issue_sub_option_id = the matching detail (e.g. Respot / Wire Off Cell). Needs GRANT SELECT ON tech_issuesuboption.
 - **1.5.01** (25 Oct 2026): Mechanic Fixed can also log a finished Tech Job in Vensoft (bowlcontrol.tech_techentry) like Lane Marshal: title = the call, description "call · note · fix", issue option matched by name, credited to the tech. Off until MYDAY_TECH_JOBS=1 in .env; needs GRANT SELECT ON tech_issueoption, GRANT INSERT ON tech_techentry and USAGE on its id sequence.

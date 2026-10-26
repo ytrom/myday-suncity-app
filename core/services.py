@@ -395,7 +395,31 @@ def tasks_for(user, session):
     tasks = list(qs[:50])
     for t in tasks:
         t.done = (t.status == "DONE" or t.id in done_overlay) and t.id not in undone_overlay
+        t.high = (t.priority or "").strip().upper() in HIGH_PRIORITY
     return tasks
+
+
+HIGH_PRIORITY = {"HIGH", "URGENT", "CRITICAL"}
+
+
+def work_lists(user, session):
+    """The Work page: (my tasks, high priority and still to do first; today's tasks for anyone)."""
+    tasks = tasks_for(user, session)
+    mine = sorted((t for t in tasks if t.is_mine), key=lambda t: (t.done, not t.high, t.created_at))
+    return mine, [t for t in tasks if not t.is_mine]
+
+
+def todays_schedule(user):
+    """Everyone rostered today, by start time: the Work page's schedule."""
+    now = timezone.localtime().time()
+    rows = []
+    for a in (ShiftAssignment.objects.select_related("shift", "user").filter(shift__date=today())
+              .order_by("shift__start_time", "user__first_name")):
+        s = a.shift
+        rows.append({"name": f"{a.user.first_name} {a.user.last_name}".strip(), "role": s.role,
+                     "start": s.start_time, "end": s.end_time, "me": a.user_id == user.id,
+                     "now": s.start_time <= now < s.end_time})
+    return rows
 
 
 def toggle_task(user, task_id, session):

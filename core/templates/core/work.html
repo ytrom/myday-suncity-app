@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+{% block title %}Work{% endblock %}
+{% block appclass %} app-wide{% endblock %}
+{% block main %}
+  <div class="work-grid">
+    <section class="section" aria-labelledby="sched-title">
+      <div class="section-head">
+        <h2 id="sched-title">Today's schedule</h2>
+        <span class="muted small">{{ today|date:"D j M" }}</span>
+      </div>
+      {% if schedule %}
+        <ul class="list card">
+          {% for s in schedule %}
+          <li class="item sched-row{% if s.me %} me{% endif %}">
+            <span class="sched-time">{{ s.start|time:"g:i a" }} – {{ s.end|time:"g:i a" }}</span>
+            <span class="grow">
+              <span class="strong">{{ s.name }}</span>
+              {% if s.role %}<span class="muted small"> · {{ s.role }}</span>{% endif %}
+            </span>
+            {% if s.now %}<span class="chip chip-good chip-mini">On now</span>{% endif %}
+            {% if s.me %}<span class="chip chip-new">You</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Nobody is rostered today.</p>
+      {% endif %}
+    </section>
+
+    <section class="section" aria-labelledby="mine-title">
+      <div class="section-head">
+        <h2 id="mine-title">My tasks</h2>
+        <span class="muted small">{% if mine_to_do %}{{ mine_to_do }} to do{% elif mine %}All done{% endif %}</span>
+      </div>
+      {% if mine %}
+        <ul class="list card">
+          {% for t in mine %}{% include "core/partials/task_item.html" %}{% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Nothing assigned to you today.</p>
+      {% endif %}
+
+      {% if others %}
+        <div class="section-head work-sub"><h2>Everyone today</h2></div>
+        <ul class="list card">
+          {% for t in others %}{% include "core/partials/task_item.html" %}{% endfor %}
+        </ul>
+      {% endif %}
+      {% if not writes_enabled %}
+        <p class="practice" role="note"><strong>Practice only:</strong> ticks here don't go into Vensoft yet and reset when you sign out.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

@@ -19,13 +19,18 @@
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% block body %}
-  <div class="app">
+  <div class="app{% block appclass %}{% endblock %}">
     {% if identity_test_mode %}
       <p class="testbar">Test sign-in · signed in as {{ staff.email }}</p>
     {% endif %}
     <header class="hero">
       <div class="hero-top">
         <img src="{% static 'core/img/wordmark-white.png' %}" alt="Sun City Tenpin" class="wordmark">
+        <nav class="desknav" aria-label="Main">
+          <a href="{% url 'myday' %}"{% if tab == 'myday' %} class="active" aria-current="page"{% endif %}>MyDay</a>
+          <a href="{% url 'work' %}"{% if tab == 'work' %} class="active" aria-current="page"{% endif %}>Work</a>
+          <a href="{% url 'roster' %}"{% if tab == 'roster' %} class="active" aria-current="page"{% endif %}>Calendar</a>
+        </nav>
         <div class="hero-right">
           <span class="pill">MYDAY <span class="pill-version">v{{ version }}</span></span>
           <a href="{% url 'details' %}" class="avatar{% if tab == 'details' %} active{% endif %}" aria-label="My details" title="My details">{{ staff.initials }}</a>
