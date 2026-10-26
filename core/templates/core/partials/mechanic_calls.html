@@ -21,6 +21,10 @@
                 {% if not attended %}
                   <button class="btn btn-ghost btn-small" hx-post="{% url 'mechanic_action' c.id 'attend' %}" hx-target="#lane-calls" hx-swap="outerHTML">On my way</button>
                 {% endif %}
+                <form method="post" action="{% url 'mechanic_fix' c.id %}" class="inline-form">
+                  {% csrf_token %}
+                  <button class="btn btn-ghost btn-small" type="submit" name="no_fault" value="1">No fault</button>
+                </form>
                 <a class="btn btn-primary btn-small" href="{% url 'mechanic_fix' c.id %}">Fixed</a>
               </div>
             </div>

@@ -291,3 +291,4 @@ button.fault { padding: 0; border: 0; background: none; font: inherit; color: in
 .fix-called { margin: 4px 0 0; }
 .fix-span { grid-column: 1 / -1; margin: 0; }
 .fault-none span { color: var(--muted, #667085); border-style: dashed; }
+.inline-form { margin: 0; display: contents; }

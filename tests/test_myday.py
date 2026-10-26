@@ -618,6 +618,7 @@ class MechanicTests(Base):
     def test_fixed_asks_what_was_fixed(self):
         self.make_mechanic()
         self.assertContains(self.client.get("/mechanic"), "/mechanic/7/fixed")
+        self.assertContains(self.client.get("/mechanic"), 'name="no_fault"')  # No fault right on the call
         with mock.patch("core.lanes.fix_menu", return_value=self.MENU), mock.patch("core.lanes.fix") as fix:
             page = self.client.get("/mechanic/7/fixed")
             self.assertContains(page, "What was fixed?")
