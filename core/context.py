@@ -60,6 +60,7 @@ def myday(request):
         "leave_writes_enabled": settings.LEAVE_WRITES_ENABLED,
         "tools": services.lane_tools(staff),
         "manager": services.is_manager(staff),
+        "work_page": services.has_work_page(staff),
         "version": VERSION,
         "identity_test_mode": getattr(request, "identity_test_mode", False),
     }

@@ -26,11 +26,11 @@
     <header class="hero">
       <div class="hero-top">
         <img src="{% static 'core/img/wordmark-white.png' %}" alt="Sun City Tenpin" class="wordmark">
-        <nav class="desknav" aria-label="Main">
+        {% if work_page %}<nav class="desknav" aria-label="Main">
           <a href="{% url 'myday' %}"{% if tab == 'myday' %} class="active" aria-current="page"{% endif %}>MyDay</a>
           <a href="{% url 'work' %}"{% if tab == 'work' %} class="active" aria-current="page"{% endif %}>Work</a>
           <a href="{% url 'roster' %}"{% if tab == 'roster' %} class="active" aria-current="page"{% endif %}>Calendar</a>
-        </nav>
+        </nav>{% endif %}
         <div class="hero-right">
           <span class="pill">MYDAY <span class="pill-version">v{{ version }}</span></span>
           <a href="{% url 'details' %}" class="avatar{% if tab == 'details' %} active{% endif %}" aria-label="My details" title="My details">{{ staff.initials }}</a>
