@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from django.db import connections
 
-WINDOW = "12 hours"  # same as Lane Marshal: older unfixed calls drop off the screen
+WINDOW = "12 hours"  # older unfixed calls drop off the screen, except breakdowns
 URGENT_SECONDS = 120
 FIXED_BY_MAX = 10
 
@@ -52,9 +52,9 @@ def open_calls():
                         ELSE EXTRACT(EPOCH FROM NOW() - attended_at)::int END,
                    resolution = %s
             FROM tech_control_troublecall
-            WHERE fixed_at IS NULL AND "DATE" > NOW() - INTERVAL '{WINDOW}'
+            WHERE fixed_at IS NULL AND ("DATE" > NOW() - INTERVAL '{WINDOW}' OR resolution = %s)
             ORDER BY "DATE"
-        """, [BREAKDOWN])
+        """, [BREAKDOWN, BREAKDOWN])
         calls = [Call(r[0], str(r[1] or ""), r[2] or "", r[3] or "", r[4] or "", max(r[5] or 0, 0), r[6], bool(r[7]))
                  for r in c.fetchall()]
     return sorted(calls, key=lambda x: x.lane_sort)
