@@ -401,6 +401,8 @@ def mechanic_action(request, call_id, action):
     try:
         if action == "attend":
             lanes.attend(call_id)
+        elif action in ("breakdown", "unbreakdown"):
+            lanes.breakdown(call_id, action == "breakdown")
         else:
             return HttpResponseBadRequest()
     except Exception:

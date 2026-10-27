@@ -8,12 +8,13 @@
         <li class="card lane-card">
           <p class="lane-name">Lane {{ lane }}</p>
           {% for c, age, attended in calls %}
-            <div class="call{% if c.urgent %} urgent{% endif %}">
+            <div class="call{% if c.breakdown %} breakdown{% elif c.urgent %} urgent{% endif %}">
               <div class="call-text">
                 <p class="strong">{{ c.issue }}{% if c.option %} · {{ c.option }}{% endif %}</p>
                 {% if c.note %}<p class="small">{{ c.note }}</p>{% endif %}
                 <p class="small muted">
                   {{ age }} ago
+                  {% if c.breakdown %}<span class="chip chip-breakdown">Breakdown</span>{% endif %}
                   {% if attended %}<span class="chip chip-warn">On the way · {{ attended }}</span>{% elif c.urgent %}<span class="chip chip-urgent">Waiting</span>{% endif %}
                 </p>
               </div>
@@ -26,6 +27,11 @@
                   <button class="btn btn-ghost btn-small" type="submit" name="no_fault" value="1">No fault</button>
                 </form>
                 <a class="btn btn-primary btn-small" href="{% url 'mechanic_fix' c.id %}">Fixed</a>
+                {% if c.breakdown %}
+                  <button class="btn btn-ghost btn-small" hx-post="{% url 'mechanic_action' c.id 'unbreakdown' %}" hx-target="#lane-calls" hx-swap="outerHTML">Undo breakdown</button>
+                {% else %}
+                  <button class="btn btn-breakdown btn-small" hx-post="{% url 'mechanic_action' c.id 'breakdown' %}" hx-target="#lane-calls" hx-swap="outerHTML">Breakdown</button>
+                {% endif %}
               </div>
             </div>
           {% endfor %}
