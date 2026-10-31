@@ -721,6 +721,10 @@ class MechanicTests(Base):
                     self.assertEqual(self.client.post("/mechanic/7/fixed", {"issue": "7"}).status_code, 302)
             # already fixed elsewhere: back to the list
             self.assertRedirects(self.client.get("/mechanic/99/fixed"), "/mechanic", fetch_redirect_response=False)
+            # that was the last open call: back to the MyDay home screen
+            with mock.patch("core.lanes.open_calls", side_effect=[[self.calls[0]], []]):
+                self.assertRedirects(self.client.post("/mechanic/7/fixed", {"no_fault": "1"}),
+                                     "/myday", fetch_redirect_response=False)
 
     def test_all_clear_and_unreachable(self):
         self.make_mechanic()
