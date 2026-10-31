@@ -2,6 +2,15 @@
 {% block title %}Mechanic{% endblock %}
 {% block main %}
   <section class="section tool-section" aria-label="Lane calls">
+    <div class="card call-alerts" data-call-alerts data-key="{{ push_key }}"
+         data-url="{% url 'mechanic_alerts' %}" data-test-url="{% url 'mechanic_alerts_test' %}" data-csrf="{{ csrf_token }}">
+      <p class="small" data-alerts-status>Call alerts ring this phone when a new lane call comes in, even when MyDay is closed.</p>
+      <div class="call-actions">
+        <button class="btn btn-primary btn-small" type="button" data-alerts-on hidden>Turn on call alerts</button>
+        <button class="btn btn-ghost btn-small" type="button" data-alerts-test hidden>Send a test</button>
+        <button class="btn btn-ghost btn-small" type="button" data-alerts-off hidden>Turn off</button>
+      </div>
+    </div>
     {% include "core/partials/mechanic_calls.html" %}
   </section>
 {% endblock %}

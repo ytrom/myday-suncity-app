@@ -111,6 +111,74 @@
   document.addEventListener("DOMContentLoaded", function () { checkCalls(document); });
   document.addEventListener("htmx:load", function (e) { checkCalls(e.target); });
 
+  // --- Mechanic: call alerts on this phone (Web Push, see core/webpush.py) ----
+  function initAlerts() {
+    var box = document.querySelector("[data-call-alerts]");
+    if (!box) return;
+    var status = box.querySelector("[data-alerts-status]");
+    var btnOn = box.querySelector("[data-alerts-on]"), btnTest = box.querySelector("[data-alerts-test]"),
+        btnOff = box.querySelector("[data-alerts-off]");
+    function show(text, on) {
+      status.textContent = text;
+      btnOn.hidden = on !== false;
+      btnTest.hidden = btnOff.hidden = on !== true;
+    }
+    function post(url, body) {
+      return fetch(url, { method: "POST", credentials: "same-origin", body: JSON.stringify(body || {}),
+        headers: { "Content-Type": "application/json", "X-CSRFToken": box.dataset.csrf } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+    }
+    function keyBytes(b64) {
+      var raw = atob((b64 + "===".slice((b64.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"));
+      return Uint8Array.from(raw, function (ch) { return ch.charCodeAt(0); });
+    }
+    var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var installed = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      show(ios && !installed
+        ? "To get call alerts on an iPhone: tap Share, then Add to Home Screen, and open MyDay from there."
+        : "This browser can't do call alerts. Use Chrome on Android, or MyDay from the Home Screen on an iPhone.");
+      return;
+    }
+    if (Notification.permission === "denied") {
+      show("Notifications are blocked for MyDay. Allow them in the phone's settings, then come back here.");
+      return;
+    }
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).then(function () { return navigator.serviceWorker.ready; })
+      .then(function (reg) {
+        function turnOn() {
+          show("Turning on...", null);
+          Notification.requestPermission().then(function (perm) {
+            if (perm !== "granted") throw new Error("denied");
+            return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(box.dataset.key) });
+          }).then(function (sub) { return post(box.dataset.url, sub.toJSON()); })
+            .then(function () { show("Call alerts are on for this phone.", true); })
+            .catch(function (e) {
+              show(e.message === "denied" ? "MyDay needs permission to send notifications for call alerts."
+                                          : "Couldn't turn on call alerts. Try again.", false);
+            });
+        }
+        btnOn.onclick = turnOn;
+        btnTest.onclick = function () {
+          post(box.dataset.testUrl).then(function (r) {
+            show(r.sent ? "Test sent. It should pop up in a few seconds." : "The test didn't go through. Turn alerts off and on again.", true);
+          }).catch(function () { show("The test didn't go through. Try again.", true); });
+        };
+        btnOff.onclick = function () {
+          reg.pushManager.getSubscription().then(function (sub) {
+            if (!sub) return;
+            return post(box.dataset.url, { endpoint: sub.endpoint, off: true }).then(function () { return sub.unsubscribe(); });
+          }).then(function () { show("Call alerts are off for this phone.", false); });
+        };
+        return reg.pushManager.getSubscription().then(function (sub) {
+          if (!sub || Notification.permission !== "granted") return show(status.textContent, false);
+          // Re-send it each visit, so the server still has it after a reinstall or a key change.
+          return post(box.dataset.url, sub.toJSON()).then(function () { show("Call alerts are on for this phone.", true); });
+        });
+      }).catch(function () { show("Couldn't set up call alerts on this phone.", false); });
+  }
+  document.addEventListener("DOMContentLoaded", initAlerts);
+
   // --- Installable app --------------------------------------------------------
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

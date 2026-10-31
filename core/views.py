@@ -15,7 +15,8 @@ from django.views.decorators.http import require_GET, require_POST
 from bc.models import ShiftAssignment, TimeEntry
 from myday_project.version import VERSION
 
-from . import lanes, services
+from . import lanes, services, webpush
+from .models import PushSubscription
 from .middleware import after_unlock_path, unlock_session
 
 log = logging.getLogger(__name__)
@@ -385,7 +386,35 @@ def _calls(request, error=None):
 @require_GET
 def mechanic(request):
     _mechanic_only(request)
-    return _page(request, "core/mechanic.html", "mechanic", **_calls(request))
+    return _page(request, "core/mechanic.html", "mechanic", push_key=webpush.public_key(), **_calls(request))
+
+
+@require_POST
+def mechanic_alerts(request):
+    """Turn call alerts on or off for this phone: {"endpoint", "keys": {"p256dh", "auth"}} from
+    the browser's push subscription, or {"endpoint", "off": true}."""
+    _mechanic_only(request)
+    try:
+        data = json.loads(request.body)
+        endpoint = data["endpoint"]
+        if not isinstance(endpoint, str) or not endpoint.startswith("https://"):
+            raise ValueError
+        if data.get("off"):
+            PushSubscription.objects.filter(endpoint=endpoint, user_id=request.staff.id).delete()
+            return JsonResponse({"on": False})
+        keys = {k: str(data["keys"][k]) for k in ("p256dh", "auth")}
+    except (ValueError, KeyError, TypeError):
+        return HttpResponseBadRequest()
+    PushSubscription.objects.update_or_create(endpoint=endpoint[:1000], defaults={"user_id": request.staff.id, **keys})
+    return JsonResponse({"on": True})
+
+
+@require_POST
+def mechanic_alerts_test(request):
+    """Send a test alert to this person's phones."""
+    _mechanic_only(request)
+    sent = webpush.send_all(PushSubscription.objects.filter(user_id=request.staff.id), webpush.TEST_MESSAGE)
+    return JsonResponse({"sent": sent})
 
 
 @require_GET
@@ -573,13 +602,30 @@ def manifest(request):
 
 @require_GET
 def service_worker(request):
-    # Minimal worker so phones offer "Add to Home Screen". It caches nothing: staff data
-    # always comes fresh from the server. Push notifications get added here later.
-    js = (
-        "self.addEventListener('install', () => self.skipWaiting());\n"
-        "self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));\n"
-        "self.addEventListener('fetch', () => {});\n"
-    )
+    # Caches nothing: staff data always comes fresh from the server. It makes MyDay installable
+    # and shows lane-call alerts (Web Push) even when MyDay is closed or the phone is locked.
+    js = """\
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+self.addEventListener('fetch', () => {});
+self.addEventListener('push', e => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch (err) {}
+  e.waitUntil(self.registration.showNotification(m.title || 'MyDay', {
+    body: m.body || '', tag: m.tag || 'myday', renotify: true, requireInteraction: true,
+    vibrate: [500, 200, 500, 200, 500], icon: '%(icon)s', badge: '%(icon)s',
+    data: { url: m.url || '/mechanic' },
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/mechanic';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('navigate' in c) return c.focus().then(() => c.navigate(url)); }
+    return self.clients.openWindow(url);
+  }));
+});
+""" % {"icon": static("core/img/icon-192.png")}
     resp = HttpResponse(js, content_type="application/javascript")
     resp["Service-Worker-Allowed"] = "/"
     resp["Cache-Control"] = "no-cache"

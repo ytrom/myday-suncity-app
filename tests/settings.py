@@ -1,5 +1,7 @@
 """Test settings: both databases are SQLite, and the BowlControl tables get created for the tests."""
 import os
+import tempfile
+from pathlib import Path
 
 os.environ.setdefault("DJANGO_SECRET_KEY", "tests-only")
 
@@ -24,6 +26,7 @@ CF_ACCESS_AUD = ""
 VENUE_LAT, VENUE_LNG, VENUE_RADIUS_M = -26.6720, 153.1060, 200
 VENUE_PUBLIC_IPS = ["203.0.113.10/32"]
 WRITES_ENABLED = False
+DATA_DIR = Path(tempfile.mkdtemp(prefix="myday-tests-"))  # the VAPID key for call alerts goes here
 
 
 class TestRouter:

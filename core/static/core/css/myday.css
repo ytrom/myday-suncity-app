@@ -318,3 +318,8 @@ button.fault { padding: 0; border: 0; background: none; font: inherit; color: in
   .app-wide main { max-width: none; padding: 0 32px; }
   .work-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; }
 }
+
+/* Mechanic: call alerts on this phone */
+.call-alerts { padding: 12px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+.call-alerts .call-actions { flex-direction: row; flex-wrap: wrap; }
+.call-alerts [hidden] { display: none !important; }
