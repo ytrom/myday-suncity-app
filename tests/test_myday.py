@@ -146,6 +146,34 @@ class PinLockTests(Base):
             session.save()
             self.assertRedirects(self.client.get("/myday"), "/unlock", fetch_redirect_response=False)
 
+    def test_back_to_the_page_asked_for_after_the_pin(self):
+        with self.signed_in():
+            self.assertRedirects(self.client.get("/roster"), "/unlock", fetch_redirect_response=False)
+            self.assertRedirects(self.unlock(), "/roster", fetch_redirect_response=False)
+            session = self.client.session
+            session["unlocked_until"] = timezone.now().timestamp() - 1
+            session.save()
+            # a form sent after the lock goes back to the page it was on
+            self.client.post("/mechanic/7/fixed", {"issue": "7"}, HTTP_REFERER="http://testserver/mechanic/7/fixed?issue=10")
+            self.assertRedirects(self.unlock(), "/mechanic/7/fixed?issue=10", fetch_redirect_response=False)
+            self.client.post("/lock")
+            session = self.client.session
+            session["after_unlock"] = "//evil.example/"
+            session.save()
+            self.assertRedirects(self.unlock(), "/myday", fetch_redirect_response=False)
+
+    @override_settings(PIN_IDLE_MINUTES=10, TOOL_PIN_IDLE_MINUTES=720, MECHANIC_ENABLED=True)
+    def test_mechanics_stay_unlocked_for_a_shift(self):
+        from core import services
+        with self.signed_in():
+            self.unlock()
+            left = self.client.session["unlocked_until"] - timezone.now().timestamp()
+            self.assertLess(left, 11 * 60)
+            services.set_mechanic(self.sam, True)
+            self.client.get("/myday")
+            left = self.client.session["unlocked_until"] - timezone.now().timestamp()
+            self.assertGreater(left, 700 * 60)
+
     def test_htmx_requests_are_sent_to_pin_pad_too(self):
         with self.signed_in():
             resp = self.client.get("/roster", HTTP_HX_REQUEST="true")

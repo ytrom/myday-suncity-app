@@ -128,6 +128,8 @@ DEV_USER_EMAIL = env("MYDAY_DEV_USER_EMAIL", "")
 
 # --- MyDay behaviour -------------------------------------------------------
 PIN_IDLE_MINUTES = int(env("MYDAY_PIN_IDLE_MINUTES", "10"))
+# Mechanics and marshals: stay unlocked for a shift so logging/fixing a call doesn't ask for the PIN.
+TOOL_PIN_IDLE_MINUTES = int(env("MYDAY_TOOL_PIN_IDLE_MINUTES", "720"))
 PIN_MAX_ATTEMPTS = int(env("MYDAY_PIN_MAX_ATTEMPTS", "5"))
 PIN_LOCKOUT_MINUTES = int(env("MYDAY_PIN_LOCKOUT_MINUTES", "5"))
 
