@@ -16,7 +16,7 @@ from bc.models import ShiftAssignment, TimeEntry
 from myday_project.version import VERSION
 
 from . import lanes, services
-from .middleware import unlock_session
+from .middleware import after_unlock_path, unlock_session
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def unlock(request):
             error = f"Too many tries. Wait {settings.PIN_LOCKOUT_MINUTES} minutes and try again."
         elif services.verify_pin(request.staff, request.POST.get("pin")):
             unlock_session(request)
-            return redirect("myday")
+            return redirect(after_unlock_path(request) or "myday")
         else:
             error = "That PIN didn't match. Try again."
             if services.pin_locked_out(request.staff):

@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 from functools import lru_cache
+from urllib.parse import urlparse
 
 import jwt
 from django.conf import settings
@@ -101,15 +102,45 @@ class PinLockMiddleware:
         now = timezone.now().timestamp()
         if s.get("unlocked_user") != request.staff.id or not until or until < now:
             s.pop("unlocked_until", None)
+            s["after_unlock"] = _return_path(request)
             return _redirect(request, self.UNLOCK_PATH)
 
-        s["unlocked_until"] = now + timedelta(minutes=settings.PIN_IDLE_MINUTES).total_seconds()
+        s["unlocked_until"] = now + timedelta(minutes=idle_minutes(request.staff)).total_seconds()
         return self.get_response(request)
 
 
+def idle_minutes(staff):
+    """How long MyDay stays unlocked with no use. Mechanics and marshals get a whole shift
+    (MYDAY_TOOL_PIN_IDLE_MINUTES), so a call can be logged or fixed without the PIN again."""
+    if any(services.lane_tools(staff).values()):
+        return max(settings.PIN_IDLE_MINUTES, settings.TOOL_PIN_IDLE_MINUTES)
+    return settings.PIN_IDLE_MINUTES
+
+
+def _return_path(request):
+    """Where to go after the PIN: the page that was asked for. For a form or an HTMX poll,
+    the page it came from (the form itself can't be replayed after the PIN)."""
+    if request.method == "GET" and not request.headers.get("HX-Request"):
+        return request.get_full_path()
+    referer = urlparse(request.headers.get("Referer", ""))
+    if referer.netloc == request.get_host() and referer.path:
+        return referer.path + (f"?{referer.query}" if referer.query else "")
+    return None
+
+
+def after_unlock_path(request):
+    """The saved page to go back to after the PIN, if it is one of ours."""
+    path = request.session.pop("after_unlock", None) or ""
+    if path.startswith("/") and not path.startswith("//") and not path.startswith(PinLockMiddleware.UNLOCK_PATH):
+        return path
+    return None
+
+
 def unlock_session(request):
+    after = request.session.get("after_unlock")
     request.session.cycle_key()
+    request.session["after_unlock"] = after
     request.session["unlocked_user"] = request.staff.id
     request.session["unlocked_until"] = (
-        timezone.now() + timedelta(minutes=settings.PIN_IDLE_MINUTES)
+        timezone.now() + timedelta(minutes=idle_minutes(request.staff))
     ).timestamp()
