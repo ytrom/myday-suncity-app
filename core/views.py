@@ -440,6 +440,49 @@ def mechanic_action(request, call_id, action):
     return render(request, "core/partials/mechanic_calls.html", _calls(request, error))
 
 
+@require_GET
+def mechanic_log(request):
+    """Log call: a call the mechanic caught before the marshal. First pick the lane..."""
+    _mechanic_only(request)
+    return _page(request, "core/mechanic_log.html", "mechanic", lanes_range=range(1, settings.LANE_COUNT + 1))
+
+
+def mechanic_log_lane(request, lane):
+    """...then what was fixed (Lane Marshal's issue list, then that issue's details), and it's
+    logged as a call that's already fixed, with a Tech Job like any other fix."""
+    _mechanic_only(request)
+    if not 1 <= lane <= settings.LANE_COUNT:
+        raise Http404
+    error = None
+    try:
+        menu = lanes.fix_menu()
+    except Exception:
+        log.exception("Lane calls database error")
+        menu, error = [], "Can't reach the lane calls right now. Try again."
+    if request.method == "POST" and menu:
+        issue = next((i for i in menu if str(i["id"]) == request.POST.get("issue", "")), None)
+        resolution = lanes.resolution_for(menu, request.POST.get("issue"), request.POST.get("option", ""))
+        if not resolution:
+            error = "Pick what was fixed."
+        else:
+            try:
+                call_id = lanes.log_fixed(lane, issue["name"], request.staff.first_name, resolution)
+            except Exception:
+                log.exception("Lane calls database error")
+                error = "That didn't save. Try again."
+            else:
+                if settings.TECH_JOB_WRITES_ENABLED and request.membership:
+                    try:
+                        call = lanes.Call(call_id, str(lane), issue["name"], "", "", 0, 0)
+                        lanes.tech_job(call, resolution, request.staff.id, request.membership.bowl_id,
+                                       issue["id"], request.POST.get("option", ""))
+                    except Exception:
+                        log.exception("Tech Job write failed")
+                return redirect(_after_fix())
+    picked = next((i for i in menu if str(i["id"]) == request.GET.get("issue", "")), None)
+    return _page(request, "core/mechanic_log_lane.html", "mechanic", lane=lane, menu=menu, picked=picked, error=error)
+
+
 def _after_fix():
     """Back to the open calls, or to the MyDay home screen once all lanes are clear."""
     try:

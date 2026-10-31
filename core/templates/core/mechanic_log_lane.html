@@ -1,0 +1,39 @@
+{% extends "core/tool_base.html" %}
+{% block title %}Log call · Lane {{ lane }}{% endblock %}
+{% block main %}
+  <section class="section tool-section" aria-labelledby="log-title">
+    <div class="lane-head">
+      {% if picked %}
+        <a href="{% url 'mechanic_log_lane' lane %}" class="back">&larr; Back</a>
+      {% else %}
+        <a href="{% url 'mechanic_log' %}" class="back">&larr; Lanes</a>
+      {% endif %}
+      <h2 id="log-title">Lane {{ lane }}</h2>
+      <a href="{% url 'mechanic' %}" class="back">All calls</a>
+    </div>
+    <p class="small muted fix-called">What was fixed? It's logged as a call you've already fixed.</p>
+    {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+    {% if menu %}
+      <form method="post" action="{% url 'mechanic_log_lane' lane %}{% if picked %}?issue={{ picked.id }}{% endif %}" aria-label="What was fixed?">
+        {% csrf_token %}
+        <div class="faults">
+          {% if picked %}
+            <input type="hidden" name="issue" value="{{ picked.id }}">
+            <p class="pin-title fix-span">{{ picked.name }}</p>
+            {% for o in picked.options %}
+              <button class="fault" type="submit" name="option" value="{{ o }}"><span>{{ o }}</span></button>
+            {% endfor %}
+          {% else %}
+            {% for i in menu %}
+              {% if i.options %}
+                <a class="fault" href="?issue={{ i.id }}"><span>{{ i.name }} &rsaquo;</span></a>
+              {% else %}
+                <button class="fault" type="submit" name="issue" value="{{ i.id }}"><span>{{ i.name }}</span></button>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </div>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

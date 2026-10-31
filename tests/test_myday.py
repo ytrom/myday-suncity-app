@@ -687,6 +687,27 @@ class MechanicTests(Base):
     MENU = [{"id": 7, "name": "Pin in Table", "options": []},
             {"id": 10, "name": "Respot", "options": ["Wire Off Cell", "Turret"]}]
 
+    def test_log_call_caught_before_the_marshal(self):
+        self.make_mechanic()
+        self.assertContains(self.client.get("/mechanic"), "/mechanic/log\"")
+        self.calls = []
+        self.assertContains(self.client.get("/mechanic"), "Log call")  # also when all lanes are clear
+        self.assertContains(self.client.get("/mechanic/log"), "/mechanic/log/20\"")
+        self.assertEqual(self.client.get("/mechanic/log/99").status_code, 404)
+        with mock.patch("core.lanes.fix_menu", return_value=self.MENU), \
+                mock.patch("core.lanes.log_fixed", return_value=55) as logged:
+            self.assertContains(self.client.get("/mechanic/log/20"), "?issue=10")
+            self.assertContains(self.client.get("/mechanic/log/20?issue=10"), 'value="Wire Off Cell"')
+            self.assertContains(self.client.post("/mechanic/log/20", {"issue": "10"}), "Pick what was fixed")
+            logged.assert_not_called()
+            with mock.patch("core.lanes.tech_job") as job, override_settings(TECH_JOB_WRITES_ENABLED=True):
+                self.assertRedirects(self.client.post("/mechanic/log/20?issue=10", {"issue": "10", "option": "Wire Off Cell"}),
+                                     "/myday", fetch_redirect_response=False)  # nothing else open: home
+            logged.assert_called_with(20, "Respot", "Sam", "Respot — Wire Off Cell")
+            call = job.call_args[0][0]
+            self.assertEqual((call.id, call.lane, call.issue), (55, "20", "Respot"))
+            self.assertEqual(job.call_args[0][4:], (10, "Wire Off Cell"))
+
     def test_fixed_asks_what_was_fixed(self):
         self.make_mechanic()
         self.assertContains(self.client.get("/mechanic"), "/mechanic/7/fixed")

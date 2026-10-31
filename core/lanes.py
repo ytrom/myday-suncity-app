@@ -167,6 +167,17 @@ def report(lane, issue, option="", note=""):
                   "VALUES (%s, %s, %s, %s, NOW(), 'APP')", [issue, str(lane), option, note])
 
 
+def log_fixed(lane, issue, who, resolution):
+    """A call the mechanic found and fixed before anyone reported it (Log call on the Mechanic
+    screen): logged and closed in one go, so it never shows as open or rings the phones."""
+    with _cursor() as c:
+        c.execute('INSERT INTO tech_control_troublecall ("ISSUE", "LANE", "OPTION", "NOTE", "DATE", "ID", '
+                  "attended_at, fixed_at, fixed_by, resolution) "
+                  "VALUES (%s, %s, '', '', NOW(), 'APP', NOW(), NOW(), %s, %s) RETURNING id",
+                  [issue, str(lane), (who or "MECH")[:FIXED_BY_MAX], resolution])
+        return c.fetchone()[0]
+
+
 PIN_ROWS = [[7, 8, 9, 10], [4, 5, 6], [2, 3], [1]]  # the pin deck as the marshal sees it
 
 
