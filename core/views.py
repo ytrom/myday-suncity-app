@@ -411,6 +411,15 @@ def mechanic_action(request, call_id, action):
     return render(request, "core/partials/mechanic_calls.html", _calls(request, error))
 
 
+def _after_fix():
+    """Back to the open calls, or to the MyDay home screen once all lanes are clear."""
+    try:
+        return "mechanic" if lanes.open_calls() else "myday"
+    except Exception:
+        log.exception("Lane calls database error")
+        return "mechanic"
+
+
 def mechanic_fix(request, call_id):
     """Fixed: what was fixed? Lane Marshal's issue list, then that issue's details (?issue=ID),
     or No fault. Saved in resolution like Lane Marshal's own Fixed menu."""
@@ -444,7 +453,7 @@ def mechanic_fix(request, call_id):
                                        fixed_issue, request.POST.get("option", ""))
                     except Exception:
                         log.exception("Tech Job write failed")  # the call is fixed; the job is extra
-                return redirect("mechanic")
+                return redirect(_after_fix())
     picked = next((i for i in menu if str(i["id"]) == request.GET.get("issue", "")), None)
     return _page(request, "core/mechanic_fix.html", "mechanic", call=call, menu=menu, picked=picked, error=error)
 
