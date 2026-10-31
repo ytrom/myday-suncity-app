@@ -98,6 +98,16 @@ DO $$ BEGIN EXECUTE format('GRANT USAGE ON SEQUENCE %s TO myday_app', pg_get_ser
 Then set `MYDAY_MECHANIC=1` in `.env` and rebuild. Staff whose Vensoft role (`accounts_membership.role`) is in `MYDAY_TECH_ROLES` (default `TECH`) get both screens automatically. To give them to anyone else:
 `docker compose exec myday python manage.py mechanic someone@example.com on`, and likewise `manage.py marshal` for the Lane Marshal screen. Calls reported from MyDay are logged with ID `APP` (the tablets use `TAB`).
 
+## Call alerts (techs' phones)
+
+New lane calls ring the phones of everyone with the Mechanic screen who has tapped **Turn on call alerts** on it (Web Push, `core/webpush.py`). They show as a normal notification with the phone's sound and buzz, even when MyDay is closed or the phone is locked, and tapping one opens the Mechanic screen.
+
+- The `myday-alerts` container (same image) runs `python manage.py call_alerts`, which looks for new calls every `MYDAY_CALL_ALERTS_POLL_SECONDS` (3). `docker compose up -d --build` starts it with MyDay. Logs: `sudo docker logs -f myday-alerts`.
+- Android: Chrome, installed or not. iPhone: iOS 16.4 or later, and only from MyDay added to the Home Screen; Silent mode and Focus can mute it.
+- Test one person's phones: `sudo docker exec myday-alerts python manage.py call_alerts --test EMAIL`, or **Send a test** on the Mechanic screen.
+- MyDay's signing key is made on first use in the data volume (`/data/vapid_private.pem`). If it is lost, every tech has to turn alerts on again.
+- VM 106 needs outbound HTTPS to the push services (fcm.googleapis.com, web.push.apple.com).
+
 ## Cloudflare setup (Morty)
 
 1. **Tunnel.** In Zero Trust, go to Networks, then Tunnels, and create a new tunnel such as `vm106-services`. Install its connector on VM 106 with the command Cloudflare shows. Don't reuse `suncity-live` on VM 100.
@@ -120,6 +130,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 ## Versions
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
+- **1.8.00** (31 Oct 2026): call alerts. New lane calls ring the techs' phones as a notification, even with MyDay closed or the phone locked (Turn on call alerts on the Mechanic screen; new `myday-alerts` container).
 - **1.7.02** (31 Oct 2026): after Fixed or No fault, if no lane calls are left open MyDay goes back to the MyDay home screen instead of "All lanes clear".
 - **1.7.01** (31 Oct 2026): after the PIN pad, MyDay goes back to the page you were on (e.g. the Mechanic fix screen) instead of the MyDay tab. Mechanics and marshals stay unlocked for a shift (MYDAY_TOOL_PIN_IDLE_MINUTES, default 720) so logging or fixing a call doesn't ask for the PIN each time; everyone else still locks after MYDAY_PIN_IDLE_MINUTES.
 - **1.7.00** (27 Oct 2026): **Breakdown** button on each mechanic call, same as Lane Marshal. The call stays open, pulses red here and on Lane Marshal's Mechanic and Control screens, and Fixed or No fault clears it. Stored as resolution = "breakdown" on the open call (no database change).

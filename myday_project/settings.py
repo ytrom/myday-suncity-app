@@ -169,6 +169,10 @@ MARSHAL_CALLS = env_list(
 # Faults that go on to a pin screen (tap the pins), like the live Lane Marshal's Re-spot.
 MARSHAL_PIN_CALLS = env_list("MYDAY_MARSHAL_PIN_CALLS", "Re-spot")
 MECHANIC_POLL_SECONDS = int(env("MYDAY_MECHANIC_POLL_SECONDS", "5"))
+# Call alerts (Web Push to the techs' phones): how often the alerts job looks for new calls,
+# and the contact address the push services see on MyDay's requests.
+CALL_ALERTS_POLL_SECONDS = float(env("MYDAY_CALL_ALERTS_POLL_SECONDS", "3"))
+PUSH_CONTACT = env("MYDAY_PUSH_CONTACT", "myday@suncitytenpin.com.au")
 # Which membership/bowl MyDay acts for when a staff member has several.
 DEFAULT_BOWL_ID = env("MYDAY_BOWL_ID", "")
 

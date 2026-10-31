@@ -14,5 +14,21 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # Watches for new lane calls and rings the techs' phones (Web Push). Same image and data.
+  myday-alerts:
+    image: suncity-myday:latest
+    container_name: myday-alerts
+    restart: unless-stopped
+    depends_on:
+      - myday
+    env_file: /opt/myday/.env
+    command: ["python", "manage.py", "call_alerts"]
+    healthcheck:
+      disable: true
+    volumes:
+      - myday-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   myday-data:

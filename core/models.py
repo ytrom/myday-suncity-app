@@ -84,3 +84,13 @@ class EntryConfirmation(models.Model):
     entry_id = models.IntegerField(unique=True)
     fingerprint = models.CharField(max_length=64)
     at = models.DateTimeField(auto_now=True)
+
+
+class PushSubscription(models.Model):
+    """A phone that gets lane-call alerts (Web Push), from Turn on call alerts on the Mechanic screen."""
+
+    user_id = models.IntegerField(db_index=True)
+    endpoint = models.URLField(max_length=1000, unique=True)
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
