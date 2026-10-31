@@ -2,6 +2,9 @@
 {% block title %}Mechanic{% endblock %}
 {% block main %}
   <section class="section tool-section" aria-label="Lane calls">
+    <div class="tool-actions">
+      <a class="btn btn-primary btn-small" href="{% url 'mechanic_log' %}">+ Log call</a>
+    </div>
     <div class="card call-alerts" data-call-alerts data-key="{{ push_key }}"
          data-url="{% url 'mechanic_alerts' %}" data-test-url="{% url 'mechanic_alerts_test' %}" data-csrf="{{ csrf_token }}">
       <p class="small" data-alerts-status>Call alerts ring this phone when a new lane call comes in, even when MyDay is closed.</p>

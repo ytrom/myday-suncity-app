@@ -1,0 +1,16 @@
+{% extends "core/tool_base.html" %}
+{% block title %}Log call{% endblock %}
+{% block main %}
+  <section class="section tool-section" aria-labelledby="log-title">
+    <div class="lane-head">
+      <p class="muted small">Which lane?</p>
+      <h2 id="log-title">Log call</h2>
+      <a href="{% url 'mechanic' %}" class="back">All calls</a>
+    </div>
+    <div class="lane-grid">
+      {% for n in lanes_range %}
+        <a href="{% url 'mechanic_log_lane' n %}" class="lane-btn"><span class="lane-no">{{ n }}</span></a>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}
