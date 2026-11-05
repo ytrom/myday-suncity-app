@@ -793,6 +793,12 @@ class MarshalTests(Base):
         self.assertEqual(self.client.get("/marshal").status_code, 404)
         self.assertEqual(self.client.post("/marshal/4", {"issue": "Interlock"}).status_code, 404)
 
+    def test_control_staff_get_it_from_their_role(self):
+        Membership.objects.create(user=self.sam, role="VENUE", bowl_id=1)
+        self.assertContains(self.client.get("/myday"), "Lane Marshal")
+        self.assertEqual(self.client.get("/marshal").status_code, 200)
+        self.assertEqual(self.client.get("/mechanic").status_code, 404)  # Lane Marshal only, not Mechanic
+
     def test_grid_shows_lanes_and_open_calls(self):
         self.make_marshal()
         self.assertContains(self.client.get("/myday"), "Lane Marshal")
