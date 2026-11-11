@@ -7,9 +7,12 @@ The lane kiosks log a call; the Mechanic screen shows the open ones and marks th
 Times are worked out inside Postgres with the server's default time zone, the same one
 Lane Marshal's connection uses, so NOW() and the stored times always agree.
 """
+import logging
 from dataclasses import dataclass
 
 from django.db import connections
+
+log = logging.getLogger(__name__)
 
 WINDOW = "12 hours"  # older unfixed calls drop off the screen, except breakdowns
 URGENT_SECONDS = 120
@@ -87,18 +90,97 @@ def fix(call_id, who, resolution=""):
                   "WHERE id = %s AND fixed_at IS NULL", [(who or "MECH")[:FIXED_BY_MAX], resolution, call_id])
 
 
-def fix_menu():
-    """What-was-fixed choices: Lane Marshal's issue list with each issue's details, as
-    [{"id", "name", "options": [names]}] in the same order as its Fixed menu."""
+def fix_menu(bowl_id=None):
+    """What-was-fixed choices as [{"id", "name", "options": [names], "choices": [...]}].
+
+    Read from Vensoft's own fault list (Tech Settings: issue options and their sub-items), so
+    anything added there shows up here straight away. If Vensoft can't be read, falls back to
+    Lane Marshal's issue list. Vensoft's issue option ids are Lane Marshal's issue ids, and both
+    are listed in id order, so the menu keeps the order the mechanics know.
+
+    A sub-item named "Back - Pin in the door" is shown one level deeper: the issue, then Back,
+    then Pin in the door (see choices_for). It's still saved under its full Vensoft name."""
+    try:
+        menu = _vensoft_fix_menu(bowl_id)
+    except Exception:
+        log.warning("Vensoft fault list unavailable, using Lane Marshal's", exc_info=True)
+        menu = []
+    if not menu:
+        menu = _lane_marshal_fix_menu()
+    for issue in menu:
+        issue["choices"] = choices_for(issue["options"])
+    return menu
+
+
+def _vensoft_fix_menu(bowl_id=None):
+    bowl = "" if bowl_id is None else " AND bowl_id = %s"
+    args = [] if bowl_id is None else [bowl_id]
+    with connections["bowlcontrol"].cursor() as c:
+        c.execute(f"SELECT id, name FROM tech_issueoption WHERE active{bowl} ORDER BY id", args)
+        issues = [{"id": r[0], "name": (r[1] or "").strip(), "options": []} for r in c.fetchall()]
+        c.execute(f"SELECT parent_id, name FROM tech_issuesuboption WHERE active{bowl} ORDER BY id", args)
+        rows = c.fetchall()
+    return _attach(issues, rows)
+
+
+def _lane_marshal_fix_menu():
     with _cursor() as c:
         c.execute('SELECT "Issue_ID", "Issue" FROM issue WHERE "Active" = true ORDER BY "Issue_ID"')
         issues = [{"id": r[0], "name": (r[1] or "").strip(), "options": []} for r in c.fetchall()]
         c.execute('SELECT detail_issue, "Detail" FROM issue_options WHERE "Active" = true ORDER BY id')
-        by_id = {i["id"]: i for i in issues}
-        for issue_id, detail in c.fetchall():
-            if issue_id in by_id and (detail or "").strip():
-                by_id[issue_id]["options"].append(detail.strip())
+        rows = c.fetchall()
+    return _attach(issues, rows)
+
+
+def _attach(issues, rows):
+    issues = [i for i in issues if i["name"]]
+    by_id = {i["id"]: i for i in issues}
+    for issue_id, detail in rows:
+        detail = " ".join((detail or "").split())
+        if issue_id in by_id and detail and detail not in by_id[issue_id]["options"]:
+            by_id[issue_id]["options"].append(detail)
     return issues
+
+
+GROUP_SEPARATORS = (" - ", " – ", " — ", " > ", ":")
+
+
+def split_option(name):
+    """("Back", "Pin in the door") for "Back - Pin in the door"; (None, name) when there's no
+    group in the name."""
+    for sep in GROUP_SEPARATORS:
+        group, found, label = name.partition(sep)
+        if found and group.strip() and label.strip():
+            return group.strip(), label.strip()
+    return None, name
+
+
+def choices_for(options):
+    """An issue's details as buttons: plain ones as {"value", "label"}, and ones that share a
+    group (Back - ..., Front - ...) gathered under {"group", "items": [{"value", "label"}]},
+    each where its first detail sits in the list."""
+    choices, groups = [], {}
+    for name in options:
+        group, label = split_option(name)
+        if group is None:
+            choices.append({"value": name, "label": name})
+            continue
+        key = group.lower()
+        if key not in groups:
+            groups[key] = {"group": group, "items": []}
+            choices.append(groups[key])
+        groups[key]["items"].append({"value": name, "label": label})
+    return choices
+
+
+def picked_choice(menu, issue_id, group=""):
+    """The issue (and the group inside it, if one was opened) from ?issue=ID&group=Back."""
+    issue = next((i for i in menu if str(i["id"]) == str(issue_id or "")), None)
+    if not issue or not group:
+        return issue, None
+    found = next((c for c in issue.get("choices") or choices_for(issue["options"])
+                  if c.get("group", "").lower() == group.strip().lower()), None)
+    return issue, found
 
 
 def resolution_for(menu, issue_id, option=""):

@@ -747,6 +747,51 @@ class MechanicTests(Base):
                 self.assertRedirects(self.client.post("/mechanic/7/fixed", {"no_fault": "1"}),
                                      "/myday", fetch_redirect_response=False)
 
+    BALL_MENU = [{"id": 3, "name": "Ball stuck",
+                  "options": ["Back - Pin in the door", "Back - Ball in pit", "Front - Ball rack", "Gutter"]}]
+
+    def test_ball_stuck_back_then_cause(self):
+        from core import lanes
+        self.assertEqual(lanes.split_option("Back - Pin in the door"), ("Back", "Pin in the door"))
+        self.assertEqual(lanes.split_option("Back: Pin in the door"), ("Back", "Pin in the door"))
+        self.assertEqual(lanes.split_option("Re-spot"), (None, "Re-spot"))
+        choices = lanes.choices_for(self.BALL_MENU[0]["options"])
+        self.assertEqual([c.get("group") or c["label"] for c in choices], ["Back", "Front", "Gutter"])
+        self.assertEqual([i["label"] for i in choices[0]["items"]], ["Pin in the door", "Ball in pit"])
+        self.make_mechanic()
+        menu = [dict(i) for i in self.BALL_MENU]
+        with mock.patch("core.lanes.fix_menu", return_value=menu), mock.patch("core.lanes.fix") as fix:
+            page = self.client.get("/mechanic/7/fixed?issue=3").content.decode()
+            self.assertIn("group=Back", page)
+            self.assertIn("group=Front", page)
+            self.assertIn('value="Gutter"', page)
+            self.assertNotIn("Pin in the door", page)
+            page = self.client.get("/mechanic/7/fixed?issue=3&group=back").content.decode()
+            self.assertIn('value="Back - Pin in the door"', page)
+            self.assertIn(">Pin in the door<", page)
+            self.assertNotIn("Ball rack", page)
+            self.assertIn("?issue=3&amp;group=Back", page)  # the form keeps its place
+            self.client.post("/mechanic/7/fixed?issue=3&group=Back", {"issue": "3", "option": "Back - Pin in the door"})
+            fix.assert_called_with(7, "Sam", "Ball stuck — Back - Pin in the door")
+            page = self.client.get("/mechanic/log/5?issue=3&group=Front").content.decode()
+            self.assertIn('value="Front - Ball rack"', page)
+
+    def test_fix_list_from_vensoft_falls_back_to_lane_marshal(self):
+        from core import lanes
+        lm = [{"id": 1, "name": "Respot", "options": ["Turret"]}]
+        with mock.patch("core.lanes._vensoft_fix_menu", side_effect=Exception("no grant")), \
+                mock.patch("core.lanes._lane_marshal_fix_menu", return_value=lm):
+            self.assertEqual(lanes.fix_menu(1)[0]["name"], "Respot")
+        vs = [{"id": 3, "name": "Ball stuck", "options": ["Back - Pin in the door"]}]
+        with mock.patch("core.lanes._vensoft_fix_menu", return_value=vs), \
+                mock.patch("core.lanes._lane_marshal_fix_menu") as lm_menu:
+            menu = lanes.fix_menu(1)
+            lm_menu.assert_not_called()
+        self.assertEqual(menu[0]["choices"][0]["group"], "Back")
+        self.assertEqual(lanes._attach([{"id": 3, "name": "Ball stuck", "options": []}],
+                                       [(3, " Back -  Pin "), (3, "Back - Pin"), (9, "x"), (3, "")])[0]["options"],
+                         ["Back - Pin"])
+
     def test_all_clear_and_unreachable(self):
         self.make_mechanic()
         self.calls = []

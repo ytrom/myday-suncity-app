@@ -1,0 +1,31 @@
+{% comment %}What was fixed: the issue list, then a picked issue's details. Details named like
+"Back - Pin in the door" sit one level deeper: the issue, then Back, then Pin in the door.{% endcomment %}
+<div class="faults">
+  {% if picked %}
+    <input type="hidden" name="issue" value="{{ picked.id }}">
+    {% if group %}
+      <p class="pin-title fix-span">{{ picked.name }} &rsaquo; {{ group.group }}</p>
+      {% for o in group.items %}
+        <button class="fault" type="submit" name="option" value="{{ o.value }}"><span>{{ o.label }}</span></button>
+      {% endfor %}
+    {% else %}
+      <p class="pin-title fix-span">{{ picked.name }}</p>
+      {% for c in picked.choices %}
+        {% if c.group %}
+          <a class="fault" href="?issue={{ picked.id }}&amp;group={{ c.group|urlencode }}"><span>{{ c.group }} &rsaquo;</span></a>
+        {% else %}
+          <button class="fault" type="submit" name="option" value="{{ c.value }}"><span>{{ c.label }}</span></button>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% else %}
+    {% for i in menu %}
+      {% if i.options %}
+        <a class="fault" href="?issue={{ i.id }}"><span>{{ i.name }} &rsaquo;</span></a>
+      {% else %}
+        <button class="fault" type="submit" name="issue" value="{{ i.id }}"><span>{{ i.name }}</span></button>
+      {% endif %}
+    {% endfor %}
+    {% if no_fault %}<button class="fault fault-none" type="submit" name="no_fault" value="1"><span>No fault found</span></button>{% endif %}
+  {% endif %}
+</div>
