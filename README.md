@@ -90,12 +90,14 @@ GRANT CONNECT ON DATABASE "Suncity_Database" TO myday_app;
 GRANT USAGE ON SCHEMA public TO myday_app;
 GRANT SELECT, UPDATE (attended_at, fixed_at, fixed_by, resolution) ON tech_control_troublecall TO myday_app;
 GRANT SELECT ON issue, issue_options TO myday_app;
+-- What-was-fixed list, read from Vensoft (run in the bowlcontrol database):
+--   GRANT SELECT ON tech_issueoption, tech_issuesuboption TO myday_app;
 -- Lane Marshal screen (reporting a lane) also needs:
 GRANT INSERT ON tech_control_troublecall TO myday_app;
 DO $$ BEGIN EXECUTE format('GRANT USAGE ON SEQUENCE %s TO myday_app', pg_get_serial_sequence('tech_control_troublecall', 'id')); END $$;
 ```
 
-Then set `MYDAY_MECHANIC=1` in `.env` and rebuild. Staff whose Vensoft role (`accounts_membership.role`) is in `MYDAY_TECH_ROLES` (default `TECH`) get both screens automatically. To give them to anyone else:
+Then set `MYDAY_MECHANIC=1` in `.env` and rebuild. Staff whose Vensoft role (`accounts_membership.role`) is in `MYDAY_TECH_ROLES` (default `TECH`) get both screens automatically, and control staff (`MYDAY_MARSHAL_ROLES`, default `VENUE`) get Lane Marshal. To give them to anyone else:
 `docker compose exec myday python manage.py mechanic someone@example.com on`, and likewise `manage.py marshal` for the Lane Marshal screen. Calls reported from MyDay are logged with ID `APP` (the tablets use `TAB`).
 
 ## Call alerts (techs' phones)
@@ -130,6 +132,8 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 ## Versions
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
+- **1.9.00** (11 Nov 2026): the Mechanic "What was fixed?" list now comes from Vensoft's own fault list (Tech Settings: issue options and sub-items), so anything added there shows straight away. Sub-items named with a dash go one level deeper: "Back - Pin in the door" shows as Ball stuck > Back > Pin in the door. Falls back to Lane Marshal's list if Vensoft can't be read. Check with `manage.py fix_menu`. Needs GRANT SELECT ON tech_issueoption, tech_issuesuboption (bowlcontrol).
+- **1.8.02** (5 Nov 2026): control staff get Lane Marshal. Anyone with the Vensoft role VENUE (MYDAY_MARSHAL_ROLES) now sees the Lane Marshal button automatically, without manage.py marshal. They don't get Mechanic.
 - **1.8.01** (31 Oct 2026): Log call on the Mechanic screen. A mechanic who catches a fault before the marshal picks the lane, then what was fixed (e.g. Lane 20, Full Set, Cells closed); it's saved as a call that is already fixed, with a Tech Job like any other fix.
 - **1.8.00** (31 Oct 2026): call alerts. New lane calls ring the techs' phones as a notification, even with MyDay closed or the phone locked (Turn on call alerts on the Mechanic screen; new `myday-alerts` container).
 - **1.7.02** (31 Oct 2026): after Fixed or No fault, if no lane calls are left open MyDay goes back to the MyDay home screen instead of "All lanes clear".

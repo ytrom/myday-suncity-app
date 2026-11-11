@@ -455,7 +455,7 @@ def mechanic_log_lane(request, lane):
         raise Http404
     error = None
     try:
-        menu = lanes.fix_menu()
+        menu = _fix_menu(request)
     except Exception:
         log.exception("Lane calls database error")
         menu, error = [], "Can't reach the lane calls right now. Try again."
@@ -479,8 +479,18 @@ def mechanic_log_lane(request, lane):
                     except Exception:
                         log.exception("Tech Job write failed")
                 return redirect(_after_fix())
-    picked = next((i for i in menu if str(i["id"]) == request.GET.get("issue", "")), None)
-    return _page(request, "core/mechanic_log_lane.html", "mechanic", lane=lane, menu=menu, picked=picked, error=error)
+    picked, group = lanes.picked_choice(menu, request.GET.get("issue"), request.GET.get("group", ""))
+    return _page(request, "core/mechanic_log_lane.html", "mechanic", lane=lane, menu=menu, picked=picked,
+                 group=group, error=error)
+
+
+def _fix_menu(request):
+    """Vensoft's fault list for this venue, each issue with its details as buttons (choices)."""
+    membership = getattr(request, "membership", None)
+    menu = lanes.fix_menu(getattr(membership, "bowl_id", None))
+    for issue in menu:
+        issue.setdefault("choices", lanes.choices_for(issue["options"]))
+    return menu
 
 
 def _after_fix():
@@ -498,7 +508,7 @@ def mechanic_fix(request, call_id):
     _mechanic_only(request)
     error = None
     try:
-        call, menu = lanes.get_call(call_id), lanes.fix_menu()
+        call, menu = lanes.get_call(call_id), _fix_menu(request)
     except Exception:
         log.exception("Lane calls database error")
         call, menu, error = None, [], "Can't reach the lane calls right now. Try again."
@@ -526,8 +536,9 @@ def mechanic_fix(request, call_id):
                     except Exception:
                         log.exception("Tech Job write failed")  # the call is fixed; the job is extra
                 return redirect(_after_fix())
-    picked = next((i for i in menu if str(i["id"]) == request.GET.get("issue", "")), None)
-    return _page(request, "core/mechanic_fix.html", "mechanic", call=call, menu=menu, picked=picked, error=error)
+    picked, group = lanes.picked_choice(menu, request.GET.get("issue"), request.GET.get("group", ""))
+    return _page(request, "core/mechanic_fix.html", "mechanic", call=call, menu=menu, picked=picked,
+                 group=group, error=error)
 
 
 def _lane_grid(error=None):
