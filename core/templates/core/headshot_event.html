@@ -1,0 +1,29 @@
+{% extends "core/tool_base.html" %}
+{% load static %}
+{% block title %}{{ ev.title|default:ev.code }}{% endblock %}
+{% block main %}
+  <section class="section tool-section" aria-labelledby="hs-title">
+    <div class="lane-head">
+      <a href="{% url 'headshot_events' %}" class="back">&larr; Events</a>
+      <h2 id="hs-title">{{ ev.code }}</h2>
+      <span class="muted small">{{ have }} of {{ ev.bowlers|length }}</span>
+    </div>
+    {% if ev.title %}<p class="muted hs-sub">{{ ev.title }}</p>{% endif %}
+    {% if done %}<p class="flash">Saved. {{ done.first|title }} {{ done.surname|title }}'s head shot will be on the banners next time they're built.</p>{% endif %}
+    {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+    {% if ev.bowlers %}
+      <input class="hs-search" type="search" placeholder="Search for a bowler" autocomplete="off" data-filter="#hs-bowlers">
+      <div id="hs-bowlers" class="card hs-list">
+        {% for b in ev.bowlers %}
+          <a href="{% url 'headshot_bowler' ev.code b.no %}" class="hs-row" data-text="{{ b.surname }} {{ b.first }} {{ b.teamName }}">
+            {% if b.photo_url %}<img class="hs-face" src="{{ b.photo_url }}" alt="" loading="lazy">{% else %}<span class="hs-face hs-initial">{{ b.initial }}</span>{% endif %}
+            <span class="hs-name"><span class="strong">{{ b.surname }}</span> {{ b.first|title }}{% if b.teamName %}<span class="muted small hs-team">{{ b.teamName }}</span>{% endif %}</span>
+            {% if b.photo_url %}<span class="chip hs-have">Done</span>{% else %}<span class="ev-go" aria-hidden="true">&rsaquo;</span>{% endif %}
+          </a>
+        {% endfor %}
+        <p class="hs-none muted small" hidden>No bowler matches.</p>
+      </div>
+    {% elif not error %}<p class="muted">This event has no bowlers in ComScore yet.</p>{% endif %}
+  </section>
+  <script src="{% static 'core/js/headshot.js' %}" defer></script>
+{% endblock %}

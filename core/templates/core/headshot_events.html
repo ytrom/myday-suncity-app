@@ -1,0 +1,28 @@
+{% extends "core/tool_base.html" %}
+{% load static %}
+{% block title %}Athlete Head Shot{% endblock %}
+{% block main %}
+  <section class="section tool-section" aria-labelledby="hs-title">
+    <div class="lane-head">
+      <a href="{% url 'event_tools' %}" class="back">&larr; Back</a>
+      <h2 id="hs-title">Pick the event</h2>
+      <span></span>
+    </div>
+    {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+    {% if events %}
+      <input class="hs-search" type="search" placeholder="Search events" autocomplete="off" data-filter="#hs-events">
+      <div id="hs-events" class="card hs-list">
+        {% for e in events %}
+          <a href="{% url 'headshot_event' e.code %}" class="hs-row" data-text="{{ e.code }} {{ e.title }}">
+            <span class="hs-code">{{ e.code }}</span>
+            <span class="hs-name">{{ e.title|default:"(no name in ComScore)" }}</span>
+            <span class="ev-go" aria-hidden="true">&rsaquo;</span>
+          </a>
+        {% endfor %}
+        <p class="hs-none muted small" hidden>No event matches.</p>
+      </div>
+      <p class="muted small hs-foot">Events from ComScore, most recently changed first.</p>
+    {% elif not error %}<p class="muted">No ComScore events found.</p>{% endif %}
+  </section>
+  <script src="{% static 'core/js/headshot.js' %}" defer></script>
+{% endblock %}

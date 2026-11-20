@@ -36,9 +36,9 @@
           <a href="{% url 'details' %}" class="avatar{% if tab == 'details' %} active{% endif %}" aria-label="My details" title="My details">{{ staff.initials }}</a>
         </div>
       </div>
-      {% if tab == "mechanic" or tab == "marshal" %}
+      {% if tab == "mechanic" or tab == "marshal" or tab == "events" %}
       <div class="toolhead">
-        <p class="toolhead-title">{% if tab == "mechanic" %}Mechanic{% else %}Lane Marshal{% endif %}</p>
+        <p class="toolhead-title">{% if tab == "mechanic" %}Mechanic{% elif tab == "events" %}Event Tools{% else %}Lane Marshal{% endif %}</p>
         <a href="{% url 'myday' %}" class="toolbar-close" aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
           Close

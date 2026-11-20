@@ -1,0 +1,42 @@
+{% extends "core/tool_base.html" %}
+{% load static %}
+{% block title %}Head shot{% endblock %}
+{% block main %}
+  <section class="section tool-section" aria-labelledby="hs-title">
+    <div class="lane-head">
+      <a href="{% url 'headshot_event' code %}" class="back">&larr; {{ code }}</a>
+      <span></span><span></span>
+    </div>
+    {% if error %}<p class="flash" data-hs-error>{{ error }}</p>{% else %}<p class="flash" data-hs-error hidden></p>{% endif %}
+    {% if b %}
+      <div class="card hs-shot" data-headshot>
+        <h2 id="hs-title" class="hs-who">{{ b.first|title }} <span class="hs-sur">{{ b.surname }}</span></h2>
+        {% if b.teamName %}<p class="muted small">{{ b.teamName }}</p>{% endif %}
+        <div class="hs-stage">
+          <canvas width="600" height="600" class="hs-canvas" data-hs-canvas hidden></canvas>
+          {% if b.photo_url %}<img class="hs-current" src="{{ b.photo_url }}" alt="Current head shot" data-hs-current>
+          {% else %}<span class="hs-current hs-initial hs-big" data-hs-current>{{ b.initial }}</span>{% endif %}
+        </div>
+        <p class="muted small hs-hint" data-hs-hint hidden>Drag to move the face into the circle. Use the slider to zoom.</p>
+        <input type="range" class="hs-zoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom" data-hs-zoom hidden>
+        <form method="post" enctype="multipart/form-data" data-hs-form>
+          {% csrf_token %}
+          <label class="btn btn-primary btn-big hs-snap">
+            <input type="file" name="photo" accept="image/*" capture="environment" data-hs-file hidden>
+            <span data-hs-snap-label>{% if b.photo_url %}Take a new photo{% else %}Take photo{% endif %}</span>
+          </label>
+          <button type="button" class="btn btn-alert btn-big" data-hs-upload hidden>Upload head shot</button>
+        </form>
+        {% if b.photo %}
+          <form method="post" class="hs-remove">
+            {% csrf_token %}
+            <input type="hidden" name="remove" value="1">
+            <button type="submit" class="btn btn-ghost btn-small">Remove photo</button>
+            <span class="muted small">Taken {{ b.photo.at|slice:":10" }}{% if b.photo.by %} by {{ b.photo.by }}{% endif %}</span>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+  <script src="{% static 'core/js/headshot.js' %}" defer></script>
+{% endblock %}

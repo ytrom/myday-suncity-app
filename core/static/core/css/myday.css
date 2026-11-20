@@ -326,3 +326,36 @@ button.fault { padding: 0; border: 0; background: none; font: inherit; color: in
 
 /* Mechanic: Log call (a call caught before the marshal) */
 .tool-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+
+/* Event Tools: Athlete Head Shot */
+.ev-tool { display: flex; align-items: center; gap: 14px; padding: 14px; margin-top: 12px; text-decoration: none; color: var(--ink); }
+.ev-tool-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--tint); color: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ev-tool-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.ev-go { font-size: 26px; line-height: 1; color: var(--grey-light); flex-shrink: 0; }
+.hs-sub { margin-top: 2px; }
+.hs-search { width: 100%; margin-top: 12px; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: #fff; font-size: 16px; }
+.hs-list { margin-top: 10px; padding: 0 14px; }
+.hs-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; min-height: 56px; text-decoration: none; color: var(--ink); }
+.hs-row + .hs-row { border-top: 1px solid var(--line); }
+.hs-code { font: 400 20px/1 var(--display); color: var(--navy); min-width: 48px; }
+.hs-name { flex: 1; min-width: 0; }
+.hs-team { display: block; }
+.hs-none { padding: 14px 0; }
+.hs-foot { margin-top: 10px; }
+.hs-face { width: 44px; height: 44px; border-radius: 999px; object-fit: cover; flex-shrink: 0; border: 2px solid var(--cyan); }
+.hs-initial { display: inline-flex; align-items: center; justify-content: center; background: var(--tint); color: var(--blue); font: 400 20px/1 var(--display); border-color: rgba(0,174,224,.4); }
+.hs-have { background: var(--good-bg); color: var(--good); }
+.hs-shot { margin-top: 12px; padding: 16px; text-align: center; }
+.hs-who { margin: 0; font: 400 28px/1.1 var(--display); color: var(--navy); }
+.hs-sur { text-transform: uppercase; }
+.hs-stage { position: relative; width: min(100%, 300px); aspect-ratio: 1; margin: 14px auto 0; display: flex; align-items: center; justify-content: center; }
+.hs-canvas { width: 100%; height: 100%; border-radius: 999px; touch-action: none; cursor: grab; box-shadow: 0 0 0 4px var(--cyan); background: #0A1017; }
+.hs-current { width: 100%; height: 100%; border-radius: 999px; object-fit: cover; box-shadow: 0 0 0 4px var(--cyan); }
+.hs-big { font-size: 120px; box-shadow: 0 0 0 4px rgba(0,174,224,.4); }
+.hs-hint { margin-top: 10px; }
+.hs-zoom { width: 100%; margin-top: 10px; accent-color: var(--blue); }
+.hs-snap { cursor: pointer; }
+.hs-snap + .btn { margin-top: 10px; }
+.hs-remove { margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.btn[disabled] { opacity: .6; }
+[hidden] { display: none !important; }

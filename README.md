@@ -130,6 +130,7 @@ Staff then open the site on their phone and use "Add to Home Screen". It install
 ## Versions
 
 The version shown in the header (and in `/healthz`) is in `myday_project/version.py`. Bump it with every update that goes out: the last part for fixes and small changes (1.0.00 → 1.0.01), the middle for new features (1.0.xx → 1.1.00).
+- **1.10.00** (20 Nov 2026): **Event Tools > Athlete Head Shot** (replaces the "More, coming soon" button). Pick a ComScore event, search for the bowler, take their photo, drag/zoom it into the circle and upload. Mission Control keeps the photos (`/api/headshots`, MissionControl/headshots) and Banner Builder V2 puts the face in the bowler's circle. MyDay reaches Mission Control on the venue network at `MYDAY_MC_URL` (default `http://192.168.0.253:3000`); `MYDAY_EVENT_TOOLS=0` hides the button. Nothing is written to ComScore or Vensoft. (1.9.00 is taken by the Mechanic fix list PR.)
 - **1.8.01** (31 Oct 2026): Log call on the Mechanic screen. A mechanic who catches a fault before the marshal picks the lane, then what was fixed (e.g. Lane 20, Full Set, Cells closed); it's saved as a call that is already fixed, with a Tech Job like any other fix.
 - **1.8.00** (31 Oct 2026): call alerts. New lane calls ring the techs' phones as a notification, even with MyDay closed or the phone locked (Turn on call alerts on the Mechanic screen; new `myday-alerts` container).
 - **1.7.02** (31 Oct 2026): after Fixed or No fault, if no lane calls are left open MyDay goes back to the MyDay home screen instead of "All lanes clear".
