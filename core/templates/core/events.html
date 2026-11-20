@@ -1,0 +1,11 @@
+{% extends "core/tool_base.html" %}
+{% block title %}Event Tools{% endblock %}
+{% block main %}
+  <section class="section tool-section" aria-label="Event Tools">
+    <a href="{% url 'headshot_events' %}" class="card ev-tool">
+      <span class="ev-tool-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+      <span class="ev-tool-text"><span class="strong">Athlete Head Shot</span><span class="muted small">Pick an event, find the bowler and take their photo. It goes in their circle on the LED wall banners.</span></span>
+      <span class="ev-go" aria-hidden="true">&rsaquo;</span>
+    </a>
+  </section>
+{% endblock %}

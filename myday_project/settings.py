@@ -175,6 +175,10 @@ MECHANIC_POLL_SECONDS = int(env("MYDAY_MECHANIC_POLL_SECONDS", "5"))
 # and the contact address the push services see on MyDay's requests.
 CALL_ALERTS_POLL_SECONDS = float(env("MYDAY_CALL_ALERTS_POLL_SECONDS", "3"))
 PUSH_CONTACT = env("MYDAY_PUSH_CONTACT", "myday@suncitytenpin.com.au")
+# Event Tools (Athlete Head Shot): staff photograph bowlers for the LED wall banners. The photos are kept on
+# Mission Control, which MyDay reaches on the venue network.
+EVENT_TOOLS_ENABLED = env_bool("MYDAY_EVENT_TOOLS", True)
+MC_URL = env("MYDAY_MC_URL", "http://192.168.0.253:3000")
 # Which membership/bowl MyDay acts for when a staff member has several.
 DEFAULT_BOWL_ID = env("MYDAY_BOWL_ID", "")
 

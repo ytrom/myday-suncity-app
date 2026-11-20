@@ -15,7 +15,7 @@ from django.views.decorators.http import require_GET, require_POST
 from bc.models import ShiftAssignment, TimeEntry
 from myday_project.version import VERSION
 
-from . import lanes, services, webpush
+from . import headshots, lanes, services, webpush
 from .models import PushSubscription
 from .middleware import after_unlock_path, unlock_session
 
@@ -683,4 +683,93 @@ self.addEventListener('notificationclick', e => {
     resp = HttpResponse(js, content_type="application/javascript")
     resp["Service-Worker-Allowed"] = "/"
     resp["Cache-Control"] = "no-cache"
+    return resp
+
+
+# --- Event Tools: Athlete Head Shot (Morty, 20 Nov 2026) ----------------------------
+# Pick a ComScore event, find the bowler, snap a photo, upload. Mission Control keeps it and Banner Builder V2
+# puts the face in the bowler's circle when the banners are built.
+
+def _events_only(request):
+    if not settings.EVENT_TOOLS_ENABLED:
+        raise Http404
+
+
+@require_GET
+def event_tools(request):
+    _events_only(request)
+    return _page(request, "core/events.html", "events")
+
+
+@require_GET
+def headshot_events(request):
+    _events_only(request)
+    error, rows = None, []
+    try:
+        rows = headshots.events()
+    except headshots.McError as exc:
+        error = str(exc)
+    return _page(request, "core/headshot_events.html", "events", events=rows, error=error)
+
+
+@require_GET
+def headshot_event(request, code):
+    _events_only(request)
+    error, ev = None, {"code": code, "title": "", "bowlers": []}
+    try:
+        ev = headshots.event(code)
+    except headshots.McError as exc:
+        error = str(exc)
+    for b in ev["bowlers"]:
+        b["photo_url"] = headshots.local_url(b.get("photo"))
+        b["initial"] = (b["surname"] or "?")[:1]
+    done = next((b for b in ev["bowlers"] if str(b["no"]) == request.GET.get("done")), None)
+    have = sum(1 for b in ev["bowlers"] if b.get("photo"))
+    return _page(request, "core/headshot_event.html", "events", ev=ev, error=error, done=done, have=have)
+
+
+def headshot_bowler(request, code, no):
+    _events_only(request)
+    error, bowler, title = None, None, ""
+    try:
+        ev = headshots.event(code)
+        title = ev.get("title", "")
+        bowler = next((b for b in ev["bowlers"] if b["no"] == no), None)
+    except headshots.McError as exc:
+        error = str(exc)
+    if bowler is None and not error:
+        raise Http404
+    if request.method == "POST" and bowler:
+        upload = request.FILES.get("photo")
+        try:
+            if request.POST.get("remove") and bowler.get("photo"):
+                headshots.remove(bowler["photo"]["id"])
+                return redirect(reverse("headshot_event", args=[code]))
+            if not upload:
+                raise headshots.McError("Take the photo first.")
+            res = headshots.upload(code, no, upload.read(), request.staff.full_name)
+            url = f"{reverse('headshot_event', args=[code])}?done={no}"
+            if request.headers.get("X-Requested-With") == "fetch":
+                return JsonResponse({"ok": True, "next": url, "photo": headshots.local_url(res.get("photo"))})
+            return redirect(url)
+        except headshots.McError as exc:
+            log.warning("Head shot upload failed: %s", exc)
+            if request.headers.get("X-Requested-With") == "fetch":
+                return JsonResponse({"ok": False, "error": str(exc)}, status=502)
+            error = str(exc)
+    if bowler:
+        bowler["photo_url"] = headshots.local_url(bowler.get("photo"))
+        bowler["initial"] = (bowler["surname"] or "?")[:1]
+    return _page(request, "core/headshot_bowler.html", "events", code=code, title=title, b=bowler, error=error)
+
+
+@require_GET
+def headshot_photo(request, photo_id):
+    _events_only(request)
+    try:
+        data = headshots.photo(photo_id)
+    except headshots.McError:
+        raise Http404
+    resp = HttpResponse(data, content_type="image/jpeg")
+    resp["Cache-Control"] = "private, max-age=86400"
     return resp

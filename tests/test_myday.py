@@ -307,7 +307,7 @@ class TabTests(Base):
         self.assertContains(resp, "1 new staff message")
         self.assertContains(resp, "1 to do")  # on the Shift Tasks button
         self.assertContains(resp, "Practice only")
-        self.assertContains(resp, "Coming soon")
+        self.assertContains(resp, "Event Tools")
         self.assertNotContains(resp, "Print league sheets")
 
     def test_roster_shows_hours_worked_including_unrostered_days(self):
