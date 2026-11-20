@@ -113,23 +113,32 @@ def set_location_check(user, on):
 LANE_TOOLS = ("mechanic", "marshal")
 
 
+def vensoft_roles(user):
+    """This person's Vensoft roles (accounts_membership.role), upper case."""
+    return {(r or "").strip().upper() for r in Membership.objects.filter(user_id=user.id).values_list("role", flat=True)}
+
+
 def is_tech(user):
     """A tech in Vensoft: any of their memberships has one of MYDAY_TECH_ROLES."""
-    roles = {(r or "").strip().upper() for r in Membership.objects.filter(user_id=user.id).values_list("role", flat=True)}
-    return bool(roles & set(settings.TECH_ROLES))
+    return bool(vensoft_roles(user) & set(settings.TECH_ROLES))
 
 
 def lane_tools(user):
     """Which lane-call screens this person gets: {"mechanic": bool, "marshal": bool}.
-    Techs (by their Vensoft role) get both; anyone else only if switched on for them
-    (manage.py mechanic / marshal). Nothing while the lane-calls feature is off."""
+    Techs (by their Vensoft role) get both; control staff (MYDAY_MARSHAL_ROLES) get Lane
+    Marshal; anyone else only if switched on for them (manage.py mechanic / marshal).
+    Nothing while the lane-calls feature is off."""
     off = dict.fromkeys(LANE_TOOLS, False)
     if not settings.MECHANIC_ENABLED or not user:
         return off
-    if is_tech(user):
+    roles = vensoft_roles(user)
+    if roles & set(settings.TECH_ROLES):
         return dict.fromkeys(LANE_TOOLS, True)
     s = StaffSetting.objects.filter(user_id=user.id).first()
-    return {t: getattr(s, t) for t in LANE_TOOLS} if s else off
+    tools = {t: getattr(s, t) for t in LANE_TOOLS} if s else dict(off)
+    if roles & set(settings.MARSHAL_ROLES):
+        tools["marshal"] = True
+    return tools
 
 
 def is_mechanic(user):

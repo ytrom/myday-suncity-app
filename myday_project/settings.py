@@ -156,6 +156,8 @@ MECHANIC_ENABLED = env_bool("MYDAY_MECHANIC", False)
 LANE_COUNT = int(env("MYDAY_LANES", "20"))
 # Vensoft roles (accounts_membership.role) that get Mechanic and Lane Marshal automatically.
 TECH_ROLES = [r.upper() for r in env_list("MYDAY_TECH_ROLES", "TECH")]
+# Vensoft roles that get Lane Marshal (report a lane) automatically: control staff.
+MARSHAL_ROLES = [r.upper() for r in env_list("MYDAY_MARSHAL_ROLES", "VENUE")]
 # Vensoft roles that get the Payroll screen (who has confirmed their hours each pay week).
 MANAGER_ROLES = [r.upper() for r in env_list("MYDAY_MANAGER_ROLES", "MANAGER")]
 # Who gets the Work page and the MyDay | Work | Calendar header on a PC (comma separated emails).
